@@ -63,6 +63,15 @@ typedef struct {
   uint32_t offset;
 } note_t;
 
+note_t notes[128];
+
+void initNotes() {
+  for (int i = 0; i < 128; i++) {
+    notes[i].onset = 0;
+    notes[i].offset = 0;
+  }
+}
+
 float envelopeValue(envelope_t envelope, int32_t index, int32_t held) {
   float value = 0.0;
   float released = 0.0;

@@ -10,4 +10,6 @@
 
 #include "synthesis.c"
 
+#include "display.c"
+
 #include "main.c"

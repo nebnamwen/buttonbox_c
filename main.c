@@ -1,38 +1,17 @@
 int main(int argc, char *argv[]) {
 
   uint32_t RunningSampleIndex = 1;
-  int BytesPerSample = sizeof(int16_t) * 2;
 
   int BufferSamples = 512;
-
   int16_t SampleOut[4096];
   void *SoundBuffer = (void *)SampleOut;
 
-  SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
-
-  SDL_Window *sdl_win;
-  sdl_win = SDL_CreateWindow("Beep", 0, 0, 100, 50, 0);
-
-  SDL_AudioSpec AudioSettings = {0};
-
-  AudioSettings.freq = SamplesPerSecond;
-  AudioSettings.format = AUDIO_S16;
-  AudioSettings.channels = 2;
-  AudioSettings.samples = BufferSamples;
-
-  SDL_OpenAudio(&AudioSettings, 0);
-
-  int TargetQueueBytes = AudioSettings.samples * BytesPerSample;
+  setupSDL();
 
   SDL_PauseAudio(0);
 
   initKeygrid();
-
-  note_t notes[128];
-  for (int i = 0; i < 128; i++) {
-    notes[i].onset = 0;
-    notes[i].offset = 0;
-  }
+  initNotes();
 
   int quit = 0;
   SDL_Event e;
@@ -110,7 +89,5 @@ int main(int argc, char *argv[]) {
     SDL_Delay(500 * TargetQueueBytes / (BytesPerSample * SamplesPerSecond));
   }
 
-  SDL_CloseAudio();
-  SDL_DestroyWindow(sdl_win);
-  SDL_Quit();
+  teardownSDL();
 }
