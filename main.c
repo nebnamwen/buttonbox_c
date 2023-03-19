@@ -1,3 +1,17 @@
+#include "SDL.h"
+#include "stdio.h"
+#include "stdlib.h"
+#include "stdint.h"
+#include "string.h"
+#include "time.h"
+#include "math.h"
+
+#include "keyboard.c"
+
+#include "synthesis.c"
+
+#include "display.c"
+
 int main(int argc, char *argv[]) {
 
   uint32_t RunningSampleIndex = 1;
@@ -7,8 +21,6 @@ int main(int argc, char *argv[]) {
   void *SoundBuffer = (void *)SampleOut;
 
   setupSDL();
-
-  SDL_PauseAudio(0);
 
   initKeygrid();
   initNotes();
