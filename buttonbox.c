@@ -6,127 +6,19 @@
 #include "time.h"
 #include "math.h"
 
-int SamplesPerSecond = 44100;
-
-#define SINE 0
-#define SQUARE 1
-#define TRIANGLE 2
-#define SAWTOOTH 3
-
-float waveformValue(char waveform, float frequency, uint32_t index) {
-  double phase = fmod(frequency*index/SamplesPerSecond,1.0);
-
-  switch (waveform) {
-  case SINE:
-    return sin(phase*M_PI*2);
-    break;
-
-  case SQUARE:
-    return (phase < 0.5) ? 1 : -1;
-    break;
-
-  case TRIANGLE:
-    return (phase < 0.5) ? (phase * 4 - 1) : (phase * -4 + 3);
-    break;
-
-  case SAWTOOTH:
-    return phase * 2 - 1;
-    break;
-
-  default:
-    return 0;
-    break;
-  }
-   
-}
+// keyboard
 
 typedef struct {
-  char waveform;
-  float volume;
-  float pan;
-  float attack;
-  float decay;
-  float sustain;
-  float release;
-} instrument_t;
+  char origin;
+  char transpose;
+  char layout;
+} keyboard_t;
 
-typedef struct {
-  instrument_t instrument;
-  float frequency;
-  uint32_t onset;
-  uint32_t offset;
-} note_t;
+keyboard_t keyboard = { 0x00, 29, 0x72 };
+signed char keygrid[128];
 
-float envelopeValue(instrument_t instrument, uint32_t index) {
-  float seconds = 1.0 * index / SamplesPerSecond;
-  if (seconds <= instrument.attack) {
-    return seconds / instrument.attack;
-  }
-  else if (seconds <= instrument.attack + instrument.decay) {
-    return 1.0 - ((seconds - instrument.attack) / instrument.decay) * (1.0 - instrument.sustain);
-  }
-  else {
-    return instrument.sustain;
-  }
-}
+void initKeygrid() {
 
-int16_t sampleValue(note_t note, uint32_t index) {
-  float envelope;
-  if (note.offset && index > note.offset) {
-    envelope = envelopeValue(note.instrument, note.offset - note.onset) * (1.0 - (index - note.offset) / (note.instrument.release * SamplesPerSecond));
-  }
-  else {
-    envelope = envelopeValue(note.instrument, index - note.onset);
-  }
-  if (envelope < 0) { return 0; }
-
-  return 32700 * note.instrument.volume * envelope * waveformValue(note.instrument.waveform, note.frequency, index - note.onset);
-}
-
-char isNoteFinished(note_t note, uint32_t index) {
-  return note.offset && index - note.offset > note.instrument.release * SamplesPerSecond;
-}
-
-int main(int argc, char *argv[]) {
-
-  uint32_t RunningSampleIndex = 1;
-  int BytesPerSample = sizeof(int16_t) * 2;
-
-  int BufferSamples = 512;
-
-  int16_t SampleOut[4096];
-  void *SoundBuffer = (void *)SampleOut;
-
-  SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
-
-  SDL_Window *sdl_win;
-  sdl_win = SDL_CreateWindow("Beep", 0, 0, 100, 50, 0);
-
-  SDL_AudioSpec AudioSettings = {0};
-
-  AudioSettings.freq = SamplesPerSecond;
-  AudioSettings.format = AUDIO_S16;
-  AudioSettings.channels = 2;
-  AudioSettings.samples = BufferSamples;
-
-  SDL_OpenAudio(&AudioSettings, 0);
-
-  printf("samples: %i\n", AudioSettings.samples);
-  int TargetQueueBytes = AudioSettings.samples * BytesPerSample;
-
-  SDL_PauseAudio(0);
-
-  instrument_t default_instrument;
-
-  default_instrument.waveform = SQUARE;
-  default_instrument.volume = 0.1;
-  default_instrument.pan = 0;
-  default_instrument.attack = 0.02;
-  default_instrument.decay = 0.2;
-  default_instrument.sustain = 0.6;
-  default_instrument.release = 0.25;
-
-  signed char keygrid[128];
   for (int i = 0; i < 128; i++) {
     keygrid[i] = -1;
   }
@@ -179,6 +71,175 @@ int main(int argc, char *argv[]) {
   keygrid[SDLK_0] = 0x39;
   keygrid[SDLK_MINUS] = 0x3A;
   keygrid[SDLK_EQUALS] = 0x3B;
+}
+
+int noteForKey(SDL_Keycode keysym) {
+  int row = keygrid[keysym] / 16 - keyboard.origin / 16;
+  int col = keygrid[keysym] % 16 - keyboard.origin % 16;
+  int note = row * (keyboard.layout / 16) + (col - row) * (keyboard.layout % 16) + keyboard.transpose;
+  return note;
+}
+
+float frequencyForNote(int note_number) {
+  return 440 * pow(2, (1.0 * note_number - 69) / 12);
+}
+
+// synthesis
+
+int SamplesPerSecond = 44100;
+
+#define SINE 0
+#define SQUARE 1
+#define TRIANGLE 2
+#define SAWTOOTH 3
+
+float waveformValue(char waveform, float frequency, uint32_t index) {
+  double phase = fmod(frequency*index/SamplesPerSecond,1.0);
+
+  switch (waveform) {
+  case SINE:
+    return sin(phase*M_PI*2);
+    break;
+
+  case SQUARE:
+    return (phase < 0.5) ? 1 : -1;
+    break;
+
+  case TRIANGLE:
+    return (phase < 0.5) ? (phase * 4 - 1) : (phase * -4 + 3);
+    break;
+
+  case SAWTOOTH:
+    return phase * 2 - 1;
+    break;
+
+  default:
+    return 0;
+    break;
+  }
+   
+}
+
+typedef struct {
+  float attack;
+  float decay;
+  float sustain;
+  float release;
+} envelope_t;
+
+typedef struct {
+  float volume;
+  float pan;
+  envelope_t main;
+  envelope_t waveform[4];
+} instrument_t;
+
+instrument_t default_instrument = {
+  0.1,
+  0.0,
+  { 0.01, 0.2, 0.6, 0.25 },
+  { { 0, 0, 0, 999 },
+    { 0, 0, 1.0, 999 },
+    { 0, 0, 0, 999 },
+    { 0, 0, 0, 999 } },
+};
+
+typedef struct {
+  instrument_t instrument;
+  float frequency;
+  uint32_t onset;
+  uint32_t offset;
+} note_t;
+
+float envelopeValue(envelope_t envelope, int32_t index, int32_t held) {
+  float value = 0.0;
+  float released = 0.0;
+
+  if (index < 0) {
+    return 0.0;
+  }
+
+  int32_t lookup = index;
+  if (held > 0 && index > held) {
+    lookup = held;
+    released = 1.0 * (index - held) / SamplesPerSecond;
+  }
+
+  if (released >= envelope.release) {
+    return 0.0;
+  }
+
+  float seconds = 1.0 * lookup / SamplesPerSecond;
+  if (seconds < envelope.attack) {
+    value = seconds / envelope.attack;
+  }
+  else if (seconds < envelope.attack + envelope.decay) {
+    value = 1.0 - ((seconds - envelope.attack) / envelope.decay) * (1.0 - envelope.sustain);
+  }
+  else {
+    value = envelope.sustain;
+  }
+
+  if (released > 0) {
+    value *= 1.0 - released / envelope.release;
+  }
+
+  return value;
+}
+
+int16_t sampleValue(note_t note, uint32_t index) {
+  int16_t value = 0;
+
+  int32_t rel_index = index - note.onset;
+  int32_t held = note.offset - note.onset;
+
+  float main_env_val = envelopeValue(note.instrument.main, rel_index, held);
+
+  if (main_env_val > 0) {
+    for (int waveform = 0; waveform <= 3; waveform++) {
+      envelope_t wf_env = note.instrument.waveform[waveform];
+      if (wf_env.attack + wf_env.decay + wf_env.sustain > 0) {
+	value += 32700 * note.instrument.volume * main_env_val * envelopeValue(wf_env, rel_index, held) * waveformValue(waveform, note.frequency, rel_index);
+      }
+    }
+  }
+
+  return value;
+}
+
+char isNoteFinished(note_t note, uint32_t index) {
+  return note.offset && index - note.offset > note.instrument.main.release * SamplesPerSecond;
+}
+
+int main(int argc, char *argv[]) {
+
+  uint32_t RunningSampleIndex = 1;
+  int BytesPerSample = sizeof(int16_t) * 2;
+
+  int BufferSamples = 512;
+
+  int16_t SampleOut[4096];
+  void *SoundBuffer = (void *)SampleOut;
+
+  SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
+
+  SDL_Window *sdl_win;
+  sdl_win = SDL_CreateWindow("Beep", 0, 0, 100, 50, 0);
+
+  SDL_AudioSpec AudioSettings = {0};
+
+  AudioSettings.freq = SamplesPerSecond;
+  AudioSettings.format = AUDIO_S16;
+  AudioSettings.channels = 2;
+  AudioSettings.samples = BufferSamples;
+
+  SDL_OpenAudio(&AudioSettings, 0);
+
+  int TargetQueueBytes = AudioSettings.samples * BytesPerSample;
+
+  SDL_PauseAudio(0);
+
+  initKeygrid();
 
   note_t notes[128];
   for (int i = 0; i < 128; i++) {
@@ -207,7 +268,7 @@ int main(int argc, char *argv[]) {
 	  if (keysym > 0 && keysym < 128 && keygrid[keysym] != -1) {
 	    int note_number = (keygrid[keysym] / 16) * 5 + (keygrid[keysym] % 16) * 2;
 	    notes[keysym].instrument = default_instrument;
-	    notes[keysym].frequency = 440 * pow(2, (1.0 * note_number - 40) / 12);
+	    notes[keysym].frequency = frequencyForNote(noteForKey(keysym));
 	    notes[keysym].onset = RunningSampleIndex;
 	    notes[keysym].offset = 0;
 	  }
