@@ -46,7 +46,7 @@ void drawKeyIcon(char grid, char onoff) {
   // printf("%i %i %i\n", row, halfcol, onoff);
 
   int start_y = 90 + 80*row;
-  int start_x = 15 + 40*halfcol;
+  int start_x = 12 + 40*halfcol;
 
   int center_y = start_y + 40;
   int center_x = start_x + 40;
@@ -62,7 +62,8 @@ void drawKeyIcon(char grid, char onoff) {
       int disp_y = target_y - center_y;
       int disp_x = target_x - center_x;
 
-      char pixel = (disp_y * disp_y + disp_x * disp_x) < radius;
+      char pixel = ((disp_y * disp_y + disp_x * disp_x) < radius &&
+		    (isWhiteKey(noteForGrid(grid)) || (disp_x + disp_y) % 2));
 
       for (int rgb = 0; rgb < 3; rgb++) {
 	screenpixels[target_y][target_x][rgb] = pixel * 255;

@@ -63,13 +63,18 @@ void initKeygrid() {
   keygrid[SDLK_EQUALS] = 0x3B;
 }
 
-int noteForKey(SDL_Keycode keysym) {
-  int row = keygrid[keysym] / 16 - keyboard.origin / 16;
-  int col = keygrid[keysym] % 16 - keyboard.origin % 16;
+int noteForGrid(char grid) {
+  int row = grid / 16 - keyboard.origin / 16;
+  int col = grid % 16 - keyboard.origin % 16;
   int note = row * (keyboard.layout / 16) + (col - row) * (keyboard.layout % 16) + keyboard.transpose;
   return note;
 }
 
 float frequencyForNote(int note_number) {
   return 440 * pow(2, (1.0 * note_number - 69) / 12);
+}
+
+char isWhiteKey(int note_number) {
+  char mod = note_number % 12;
+  return (mod % 2) == (mod >= 5);  
 }
