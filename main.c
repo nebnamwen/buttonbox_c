@@ -25,6 +25,8 @@ int main(int argc, char *argv[]) {
   initKeygrid();
   initNotes();
 
+  initDisplay();
+
   int quit = 0;
   SDL_Event e;
   SDL_Keycode keysym = 0;
@@ -44,11 +46,12 @@ int main(int argc, char *argv[]) {
 	else if (e.key.repeat == 0) {
 	  keysym = e.key.keysym.sym;
 	  if (keysym > 0 && keysym < 128 && keygrid[keysym] != -1) {
-	    int note_number = (keygrid[keysym] / 16) * 5 + (keygrid[keysym] % 16) * 2;
 	    notes[keysym].instrument = default_instrument;
 	    notes[keysym].frequency = frequencyForNote(noteForKey(keysym));
 	    notes[keysym].onset = RunningSampleIndex;
 	    notes[keysym].offset = 0;
+
+	    drawKeyIcon(keygrid[keysym], 1);
 	  }
 	}
 	break;
@@ -57,6 +60,7 @@ int main(int argc, char *argv[]) {
 	keysym = e.key.keysym.sym;
 	if (keysym > 0 && keysym < 128 && keygrid[keysym] != -1) {
 	  notes[keysym].offset = RunningSampleIndex;
+	  drawKeyIcon(keygrid[keysym], 0);
 	}
 	break;
 	
@@ -97,6 +101,8 @@ int main(int argc, char *argv[]) {
     }
 
     SDL_QueueAudio(1, SoundBuffer, BytesToWrite);
+
+    updateDisplay();
 
     SDL_Delay(500 * TargetQueueBytes / (BytesPerSample * SamplesPerSecond));
   }
