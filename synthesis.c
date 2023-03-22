@@ -5,6 +5,8 @@ int SamplesPerSecond = 44100;
 #define TRIANGLE 2
 #define SAWTOOTH 3
 
+#define NUM_WAVEFORMS 4
+
 float waveformValue(char waveform, float frequency, uint32_t index) {
   double phase = fmod(frequency*index/SamplesPerSecond,1.0);
 
@@ -34,6 +36,7 @@ float waveformValue(char waveform, float frequency, uint32_t index) {
 
 typedef struct {
   float attack;
+  float peak;
   float decay;
   float sustain;
   float release;
@@ -43,17 +46,17 @@ typedef struct {
   float volume;
   float pan;
   envelope_t main;
-  envelope_t waveform[4];
+  envelope_t waveform[NUM_WAVEFORMS];
 } instrument_t;
 
 instrument_t default_instrument = {
   0.1,
   0.0,
-  { 0.01, 0.2, 0.6, 0.25 },
-  { { 0, 0, 0, 999 },
-    { 0, 0, 1.0, 999 },
-    { 0, 0, 0, 999 },
-    { 0, 0, 0, 999 } },
+  { 0.01, 1.0, 0.2, 0.6, 0.25 },
+  { { 0, 0, 0, 0, 999 },
+    { 0, 0, 0, 1.0, 999 },
+    { 0, 0, 0, 0, 999 },
+    { 0, 0, 0, 0, 999 } },
 };
 
 typedef struct {
@@ -92,10 +95,10 @@ float envelopeValue(envelope_t envelope, int32_t index, int32_t held) {
 
   float seconds = 1.0 * lookup / SamplesPerSecond;
   if (seconds < envelope.attack) {
-    value = seconds / envelope.attack;
+    value = envelope.peak * seconds / envelope.attack;
   }
   else if (seconds < envelope.attack + envelope.decay) {
-    value = 1.0 - ((seconds - envelope.attack) / envelope.decay) * (1.0 - envelope.sustain);
+    value = envelope.peak - ((seconds - envelope.attack) / envelope.decay) * (envelope.peak - envelope.sustain);
   }
   else {
     value = envelope.sustain;
@@ -117,7 +120,7 @@ int16_t sampleValue(note_t note, uint32_t index) {
   float main_env_val = envelopeValue(note.instrument.main, rel_index, held);
 
   if (main_env_val > 0) {
-    for (int waveform = 0; waveform <= 3; waveform++) {
+    for (int waveform = 0; waveform < NUM_WAVEFORMS; waveform++) {
       envelope_t wf_env = note.instrument.waveform[waveform];
       if (wf_env.attack + wf_env.decay + wf_env.sustain > 0) {
 	value += 32700 * note.instrument.volume * main_env_val * envelopeValue(wf_env, rel_index, held) * waveformValue(waveform, note.frequency, rel_index);
