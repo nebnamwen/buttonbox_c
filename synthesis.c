@@ -4,8 +4,21 @@ int SamplesPerSecond = 44100;
 #define SQUARE 1
 #define TRIANGLE 2
 #define SAWTOOTH 3
+#define NOISE 4
 
-#define NUM_WAVEFORMS 4
+#define NUM_WAVEFORMS 5
+
+#define NOISE_RES 32768
+
+// from http://burtleburtle.net/bob/hash/integer.html
+int32_t noiseHash(uint32_t a) {
+  a = (a ^ 61) ^ (a >> 16);
+  a = a + (a << 3);
+  a = a ^ (a >> 4);
+  a = a * 0x27d4eb2d;
+  a = a ^ (a >> 15);
+  return (int32_t)a;
+}
 
 float waveformValue(char waveform, float frequency, uint32_t index) {
   double phase = fmod(frequency*index/SamplesPerSecond,1.0);
@@ -25,6 +38,16 @@ float waveformValue(char waveform, float frequency, uint32_t index) {
 
   case SAWTOOTH:
     return phase * 2 - 1;
+    break;
+
+  case NOISE:
+    phase = 0;
+    double period = 1.0 * SamplesPerSecond / (frequency * 12);
+    uint32_t seed = index / period;
+    phase = (index - seed * period) * 1.0 / period;
+    float result = ((noiseHash(seed) % NOISE_RES) * (1.0 - phase) / NOISE_RES +
+		    (noiseHash(seed + 1) % NOISE_RES) * phase / NOISE_RES);
+    return result;
     break;
 
   default:
@@ -50,13 +73,16 @@ typedef struct {
 } instrument_t;
 
 instrument_t default_instrument = {
-  0.1,
+  0.2,
   0.0,
-  { 0.01, 1.0, 0.2, 0.6, 0.25 },
-  { { 0, 0, 0, 0, 999 },
-    { 0, 0, 0, 1.0, 999 },
-    { 0, 0, 0, 0, 999 },
-    { 0, 0, 0, 0, 999 } },
+  { 0, 1.0, 0, 1.0, 0.25 },
+  {
+    { 0, 0, 0, 0, 999 }, // SINE
+    { 0, 0, 0, 0.5, 999 }, // SQUARE
+    { 0, 0, 0, 0, 999 }, // TRIANGLE
+    { 0, 0, 0, 0, 999 }, // SAWTOOTH
+    { 0, 1, 0.3, 0, 0.3 }, // NOISE
+  },
 };
 
 typedef struct {
