@@ -1,10 +1,12 @@
 int SamplesPerSecond = 44100;
 
-#define SINE 0
-#define SQUARE 1
-#define TRIANGLE 2
-#define SAWTOOTH 3
-#define NOISE 4
+#define MAIN 0
+
+#define SINE 1
+#define SQUARE 2
+#define TRIANGLE 3
+#define SAWTOOTH 4
+#define NOISE 5
 
 #define NUM_WAVEFORMS 5
 
@@ -68,15 +70,14 @@ typedef struct {
 typedef struct {
   float volume;
   float pan;
-  envelope_t main;
-  envelope_t waveform[NUM_WAVEFORMS];
+  envelope_t envelope[NUM_WAVEFORMS + 1];
 } instrument_t;
 
 instrument_t default_instrument = {
   0.2,
   0.0,
-  { 0, 1.0, 0, 1.0, 0.25 },
   {
+    { 0, 1.0, 0, 1.0, 0.25 }, // MAIN ENVELOPE
     { 0, 0, 0, 0, 999 }, // SINE
     { 0, 0, 0, 0.5, 999 }, // SQUARE
     { 0, 0, 0, 0, 999 }, // TRIANGLE
@@ -143,11 +144,11 @@ int16_t sampleValue(note_t note, uint32_t index) {
   int32_t rel_index = index - note.onset;
   int32_t held = note.offset - note.onset;
 
-  float main_env_val = envelopeValue(note.instrument.main, rel_index, held);
+  float main_env_val = envelopeValue(note.instrument.envelope[MAIN], rel_index, held);
 
   if (main_env_val > 0) {
-    for (int waveform = 0; waveform < NUM_WAVEFORMS; waveform++) {
-      envelope_t wf_env = note.instrument.waveform[waveform];
+    for (int waveform = 1; waveform <= NUM_WAVEFORMS; waveform++) {
+      envelope_t wf_env = note.instrument.envelope[waveform];
       if (wf_env.attack + wf_env.decay + wf_env.sustain > 0) {
 	value += 32700 * note.instrument.volume * main_env_val * envelopeValue(wf_env, rel_index, held) * waveformValue(waveform, note.frequency, rel_index);
       }
@@ -158,5 +159,5 @@ int16_t sampleValue(note_t note, uint32_t index) {
 }
 
 char isNoteFinished(note_t note, uint32_t index) {
-  return note.offset && index - note.offset > note.instrument.main.release * SamplesPerSecond;
+  return note.offset && index - note.offset > note.instrument.envelope[MAIN].release * SamplesPerSecond;
 }
