@@ -149,8 +149,11 @@ int16_t sampleValue(note_t note, uint32_t index) {
   if (main_env_val > 0) {
     for (int waveform = 1; waveform <= NUM_WAVEFORMS; waveform++) {
       envelope_t wf_env = note.instrument.envelope[waveform];
-      if (wf_env.attack + wf_env.decay + wf_env.sustain > 0) {
-	value += 32700 * note.instrument.volume * main_env_val * envelopeValue(wf_env, rel_index, held) * waveformValue(waveform, note.frequency, rel_index);
+      if ((wf_env.attack + wf_env.decay) * wf_env.peak + wf_env.sustain > 0) {
+	float wf_env_val = envelopeValue(wf_env, rel_index, held);
+	if (wf_env_val > 0) {
+	  value += 32700 * note.instrument.volume * main_env_val * wf_env_val * waveformValue(waveform, note.frequency, rel_index);
+	}
       }
     }
   }
