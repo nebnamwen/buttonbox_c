@@ -77,12 +77,12 @@ instrument_t default_instrument = {
   0.2,
   0.0,
   {
-    { 0, 1.0, 0, 1.0, 0.25 }, // MAIN ENVELOPE
-    { 0, 0, 0, 0, 999 }, // SINE
-    { 0, 0, 0, 0.5, 999 }, // SQUARE
+    { 0, 1, 0, 1, 0.25 }, // MAIN ENVELOPE
+    { 0.02, 1, 0.7, 0.6, 999 }, // SINE
+    { 0, 0, 0, 0, 999 }, // SQUARE
     { 0, 0, 0, 0, 999 }, // TRIANGLE
-    { 0, 0, 0, 0, 999 }, // SAWTOOTH
-    { 0, 1, 0.3, 0, 0.3 }, // NOISE
+    { 0.3, 0.1, 0.5, 0.6, 999 }, // SAWTOOTH
+    { 0, 1, 0.1, 0, 0.1 }, // NOISE
   },
 };
 
