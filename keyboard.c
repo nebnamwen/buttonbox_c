@@ -4,7 +4,7 @@ typedef struct {
   char layout;
 } keyboard_t;
 
-keyboard_t keyboard = { 0x00, 29, 0x72 };
+keyboard_t keyboard = { 0x31, 36, 0x13 };
 signed char keygrid[128];
 
 void initKeygrid() {
