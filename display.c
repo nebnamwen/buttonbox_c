@@ -40,6 +40,9 @@ void teardownSDL() {
 }
 
 void drawKeyIcon(char grid, char onoff) {
+  int kb = keyboardForGrid(grid);
+  int is_white = isWhiteKey(noteForGrid(grid));
+
   int row = 3 - (grid / 16);
   int halfcol = (grid % 16) * 2 + row;
 
@@ -51,9 +54,12 @@ void drawKeyIcon(char grid, char onoff) {
   int center_y = start_y + 40;
   int center_x = start_x + 40;
 
-  int radius = 25 + 10*onoff;
-  radius *= radius; // square for distance calculation
+  int outradius = 25 + 10*onoff;
+  outradius *= outradius; // square for distance calculation
 
+  int inradius = 20 + 5*onoff;
+  inradius *= inradius; // square for distance calculation
+  
   for (int dy = 0; dy < 80; dy++) {
     for (int dx = 0; dx < 80; dx++) {
       int target_y = start_y + dy;
@@ -62,12 +68,66 @@ void drawKeyIcon(char grid, char onoff) {
       int disp_y = target_y - center_y;
       int disp_x = target_x - center_x;
 
-      char pixel = ((disp_y * disp_y + disp_x * disp_x) < radius &&
-		    (isWhiteKey(noteForGrid(grid)) || (disp_x + disp_y) % 2));
+      int pixradius = disp_y * disp_y + disp_x * disp_x;
+      
+      unsigned char red = 0;
+      unsigned char green = 0;
+      unsigned char blue = 0;
+      
+      if (pixradius < outradius) {
+	if ((pixradius > inradius) || (disp_x + disp_y) % 2) {
+	  switch (keyboard[kb].color) {
+	  case COL_GRAY:
+	    red = 128;
+	    green = 128;
+	    blue = 128;
+	    break;
 
-      for (int rgb = 0; rgb < 3; rgb++) {
-	screenpixels[target_y][target_x][rgb] = pixel * 255;
+	  case COL_RED:
+	    red = 255;
+	    break;
+
+	  case COL_GREEN:
+	    green = 255;
+	    break;
+
+	  case COL_YELLOW:
+	    red = 255;
+	    green = 255;
+	    break;
+
+	  case COL_BLUE:
+	    blue = 255;
+	    break;
+
+	  case COL_MAGENTA:
+	    red = 255;
+	    blue = 255;
+	    break;
+
+	  case COL_CYAN:
+	    green = 255;
+	    blue = 255;
+	    break;
+
+	  case COL_BROWN:
+	    red = 128;
+	    green = 72;
+	    break;
+	  }
+	}
+	else {
+	  if (is_white) {
+	    red = 255;
+	    green = 255;
+	    blue = 255;
+	  }
+	}
       }
+
+      screenpixels[target_y][target_x][0] = blue;
+      screenpixels[target_y][target_x][1] = green;
+      screenpixels[target_y][target_x][2] = red;
     }
   }
 }

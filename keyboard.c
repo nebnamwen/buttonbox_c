@@ -1,13 +1,37 @@
 typedef struct {
+  char split;
+  char slant;
+  char color;
   char origin;
   char transpose;
   char layout;
 } keyboard_t;
 
-keyboard_t keyboard = { 0x31, 36, 0x13 };
+#define COL_GRAY 0
+#define COL_RED 1
+#define COL_GREEN 2
+#define COL_YELLOW 3
+#define COL_BLUE 4
+#define COL_MAGENTA 5
+#define COL_CYAN 6
+#define COL_BROWN 7
+
+keyboard_t default_keyboard = { 0x09, '/', 0, 0x31, 36, 0x13 };
+
+#define NUM_INSTS 8
+keyboard_t keyboard[NUM_INSTS];
+
 signed char keygrid[128];
 
 void initKeygrid() {
+
+  for (int i = 0; i < NUM_INSTS; i++) {
+    keyboard[i] = default_keyboard;
+
+    // demo code to show keyboard splitting -- not final
+    keyboard[i].color = i;
+    keyboard[i].split = i;
+  }
 
   for (int i = 0; i < 128; i++) {
     keygrid[i] = -1;
@@ -63,10 +87,46 @@ void initKeygrid() {
   keygrid[SDLK_EQUALS] = 0x3B;
 }
 
+int keyboardForGrid(char grid) {
+  for (int i = 0; i < NUM_INSTS; i++) {
+    int du, dv;
+
+    switch (keyboard[i].slant) {
+    case '\\':
+      du = 0;
+      dv = 1;
+      break;
+
+    case '/':
+      du = -1;
+      dv = 1;
+      break;
+
+    case '|':
+      du = -1;
+      dv = 2;
+      break;
+
+    default:
+      du = 0;
+      dv = 1;
+    }
+
+    int split = du * (keyboard[i].split / 16) + dv * (keyboard[i].split % 16);
+    int key = du * (grid / 16) + dv * (grid % 16);
+    if (key <= split) {
+      return i;
+    }
+  }
+
+  return NUM_INSTS - 1;
+}
+
 int noteForGrid(char grid) {
-  int row = grid / 16 - keyboard.origin / 16;
-  int col = grid % 16 - keyboard.origin % 16;
-  int note = row * (keyboard.layout / 16) + (col - row) * (keyboard.layout % 16) + keyboard.transpose;
+  int kb = keyboardForGrid(grid);
+  int row = grid / 16 - keyboard[kb].origin / 16;
+  int col = grid % 16 - keyboard[kb].origin % 16;
+  int note = row * (keyboard[kb].layout / 16) + (col - row) * (keyboard[kb].layout % 16) + keyboard[kb].transpose;
   return note;
 }
 
