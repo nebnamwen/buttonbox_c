@@ -16,7 +16,7 @@ typedef struct {
 #define COL_CYAN 6
 #define COL_BROWN 7
 
-keyboard_t default_keyboard = { 0x09, '/', 0, 0x31, 36, 0x13 };
+keyboard_t default_keyboard = { 0x09, '/', 0, 0x00, 36, 0x72 };
 
 #define NUM_INSTS 8
 keyboard_t keyboard[NUM_INSTS];
@@ -27,10 +27,6 @@ void initKeygrid() {
 
   for (int i = 0; i < NUM_INSTS; i++) {
     keyboard[i] = default_keyboard;
-
-    // demo code to show keyboard splitting -- not final
-    keyboard[i].color = i;
-    keyboard[i].split = i;
   }
 
   for (int i = 0; i < 128; i++) {
