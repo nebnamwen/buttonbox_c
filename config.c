@@ -19,6 +19,61 @@ char* nexttok(char* start, const char* split) {
 int current_inst = 0;
 int current_wav = MAIN;
 
+void setEnvAttack(const char* value, const char* file) {
+  float val = atof(value);
+  if (val < 0) {
+    if (strlen(file)) { printf("(%s): ", file); }
+    printf("Invalid value for envelope attack: %s\n", value);
+    printf("(Should be > 0)\n");
+    exit(1);      
+  }
+  instrument[current_inst].envelope[current_wav].attack = val;
+}
+
+void setEnvPeak(const char* value, const char* file) {
+  float val = atof(value);
+  if (val < 0 || val > 1) {
+    if (strlen(file)) { printf("(%s): ", file); }
+    printf("Invalid value for envelope peak: %s\n", value);
+    printf("(Should be between 0 and 1)\n");
+    exit(1);      
+  }
+  instrument[current_inst].envelope[current_wav].peak = val;
+}
+
+void setEnvDecay(const char* value, const char* file) {
+  float val = atof(value);
+  if (val < 0) {
+    if (strlen(file)) { printf("(%s): ", file); }
+    printf("Invalid value for envelope decay: %s\n", value);
+    printf("(Should be > 0)\n");
+    exit(1);      
+  }
+  instrument[current_inst].envelope[current_wav].decay = val;
+}
+
+void setEnvSustain(const char* value, const char* file) {
+  float val = atof(value);
+  if (val < 0 || val > 1) {
+    if (strlen(file)) { printf("(%s): ", file); }
+    printf("Invalid value for envelope sustain: %s\n", value);
+    printf("(Should be between 0 and 1)\n");
+    exit(1);      
+  }
+  instrument[current_inst].envelope[current_wav].sustain = val;
+}
+
+void setEnvRelease(const char* value, const char* file) {
+  float val = atof(value);
+  if (val < 0) {
+    if (strlen(file)) { printf("(%s): ", file); }
+    printf("Invalid value for envelope release: %s\n", value);
+    printf("(Should be > 0)\n");
+    exit(1);      
+  }
+  instrument[current_inst].envelope[current_wav].release = val;
+}
+
 void doConfigClause(char* clause, const char* file) {
   char* key = clause;
   char* value = nexttok(clause, "=");
@@ -140,65 +195,60 @@ void doConfigClause(char* clause, const char* file) {
 
   // set attack (float)
   else if (strncmp(key, "att", 3) == 0) {
-    float val = atof(value);
-    if (val < 0) {
-      if (strlen(file)) { printf("(%s): ", file); }
-      printf("Invalid value for envelope attack: %s\n", value);
-      printf("(Should be > 0)\n");
-      exit(1);      
-    }
-    instrument[current_inst].envelope[current_wav].attack = val;
+    setEnvAttack(value, file);
   }
 
   // set peak (float)
   else if (strncmp(key, "pea", 3) == 0) {
-    float val = atof(value);
-    if (val < 0 || val > 1) {
-      if (strlen(file)) { printf("(%s): ", file); }
-      printf("Invalid value for envelope peak: %s\n", value);
-      printf("(Should be between 0 and 1)\n");
-      exit(1);      
-    }
-    instrument[current_inst].envelope[current_wav].peak = val;
+    setEnvPeak(value, file);
   }
 
   // set decay (float)
   else if (strncmp(key, "dec", 3) == 0) {
-    float val = atof(value);
-    if (val < 0) {
-      if (strlen(file)) { printf("(%s): ", file); }
-      printf("Invalid value for envelope decay: %s\n", value);
-      printf("(Should be > 0)\n");
-      exit(1);      
-    }
-    instrument[current_inst].envelope[current_wav].decay = val;
+    setEnvDecay(value, file);
   }
 
   // set sustain (float)
   else if (strncmp(key, "sus", 3) == 0) {
-    float val = atof(value);
-    if (val < 0 || val > 1) {
-      if (strlen(file)) { printf("(%s): ", file); }
-      printf("Invalid value for envelope sustain: %s\n", value);
-      printf("(Should be between 0 and 1)\n");
-      exit(1);      
-    }
-    instrument[current_inst].envelope[current_wav].sustain = val;
+    setEnvSustain(value, file);
   }
 
   // set release (float)
   else if (strncmp(key, "rel", 3) == 0) {
-    float val = atof(value);
-    if (val < 0) {
-      if (strlen(file)) { printf("(%s): ", file); }
-      printf("Invalid value for envelope release: %s\n", value);
-      printf("(Should be > 0)\n");
-      exit(1);      
-    }
-    instrument[current_inst].envelope[current_wav].release = val;
+    setEnvRelease(value, file);
   }
 
   // set envelope (all six parameters, float, split on ",/")
+  else if (strncmp(key, "env", 3) == 0) {
+    char *val[5];
+    for (int i = 0; i < 5; i++) {
+      if (value == NULL) {
+	if (strlen(file)) { printf("(%s): ", file); }
+	printf("Not enough values in envelope specification: %d (expected 5)\n", i);
+	exit(1);
+      }
+      val[i] = value;
+      value = nexttok(value, ",/");
+    }
+
+    if (value != NULL) {
+      if (strlen(file)) { printf("(%s): ", file); }
+      printf("Too many values in envelope specification: %s\n", value);
+      exit(1);
+    }
+
+    setEnvAttack(val[0], file);
+    setEnvPeak(val[1], file);
+    setEnvDecay(val[2], file);
+    setEnvSustain(val[3], file);
+    setEnvRelease(val[4], file);
+  }
+
+  else {
+    if (strlen(file)) { printf("(%s): ", file); }
+    printf("Unknown config key: %s\n", key);
+    exit(1);
+  }
 }
 
 void doConfigLine(char* line, const char* file) {
