@@ -10,6 +10,8 @@
 
 #include "synthesis.c"
 
+#include "config.c"
+
 #include "display.c"
 
 int main(int argc, char *argv[]) {
@@ -25,6 +27,13 @@ int main(int argc, char *argv[]) {
   initKeygrid();
   initNotes();
 
+  for (int i = 1; i < argc; i++) {
+    char *arg = argv[i];
+    char *pos = strchr(arg, '=');
+    if (pos == NULL) { doConfigFile(arg); }
+    else { doConfigLine(arg, ""); }
+  }
+  
   initDisplay();
 
   int quit = 0;
