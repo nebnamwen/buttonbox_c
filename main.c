@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
 	else if (e.key.repeat == 0) {
 	  keysym = e.key.keysym.sym;
 	  if (keysym > 0 && keysym < 128 && keygrid[keysym] != -1) {
-	    notes[keysym].instrument = default_instrument;
+	    notes[keysym].instrument = instrument[keyboardForGrid(keygrid[keysym])];
 	    notes[keysym].frequency = frequencyForNote(noteForGrid(keygrid[keysym]));
 	    notes[keysym].onset = RunningSampleIndex;
 	    notes[keysym].offset = 0;

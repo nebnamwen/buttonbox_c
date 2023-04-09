@@ -67,7 +67,7 @@ void doConfigClause(char* clause, const char* file) {
     if (strchr("/|\\", val) == NULL) {
       if (strlen(file)) { printf("(%s): ", file); }
       printf("Invalid value for keyboard split slant: %s\n", value);
-      printf("(Should be between one of / | \\)\n");
+      printf("(Should be one of / | \\)\n");
       exit(1);      
     }
     keyboard[current_inst].slant = val;
@@ -98,16 +98,107 @@ void doConfigClause(char* clause, const char* file) {
   }
 
   // set volume (float)
+  else if (strncmp(key, "vol", 3) == 0) {
+    float val = atof(value);
+    if (val < 0 || val > 1) {
+      if (strlen(file)) { printf("(%s): ", file); }
+      printf("Invalid value for instrument volume: %s\n", value);
+      printf("(Should be between 0 and 1)\n");
+      exit(1);      
+    }
+    instrument[current_inst].volume = val;
+  }
+
   // set pan (float)
+  else if (strncmp(key, "pan", 3) == 0) {
+    float val = atof(value);
+    if (val < -1 || val > 1) {
+      if (strlen(file)) { printf("(%s): ", file); }
+      printf("Invalid value for instrument pan: %s\n", value);
+      printf("(Should be between -1 and 1)\n");
+      exit(1);      
+    }
+    instrument[current_inst].pan = val;
+  }
 
   // select waveform (main|sine|square|triangle|sawtooth|noise)
-  // set envelope (all six parameters, float, split on ",/")
-  // set attack (float)
-  // set peak (float)
-  // set decay (float)
-  // set sustain (float)
-  // set release (float)
+  else if (strncmp(key, "wav", 3) == 0) {
+    if (strncmp(value, "mai", 3) == 0) { current_wav = MAIN; }
+    else if (strncmp(value, "sin", 3) == 0) { current_wav = SINE; }
+    else if (strncmp(value, "squ", 3) == 0) { current_wav = SQUARE; }
+    else if (strncmp(value, "tri", 3) == 0) { current_wav = TRIANGLE; }
+    else if (strncmp(value, "saw", 3) == 0) { current_wav = SAWTOOTH; }
+    else if (strncmp(value, "noi", 3) == 0) { current_wav = NOISE; }
 
+    else {
+      if (strlen(file)) { printf("(%s): ", file); }
+      printf("Unknown waveform: %s\n", value);
+      printf("(Should be main/sine/square/triangle/sawtooth/noise)\n");
+      exit(1);
+    }
+  }
+
+  // set attack (float)
+  else if (strncmp(key, "att", 3) == 0) {
+    float val = atof(value);
+    if (val < 0) {
+      if (strlen(file)) { printf("(%s): ", file); }
+      printf("Invalid value for envelope attack: %s\n", value);
+      printf("(Should be > 0)\n");
+      exit(1);      
+    }
+    instrument[current_inst].envelope[current_wav].attack = val;
+  }
+
+  // set peak (float)
+  else if (strncmp(key, "pea", 3) == 0) {
+    float val = atof(value);
+    if (val < 0 || val > 1) {
+      if (strlen(file)) { printf("(%s): ", file); }
+      printf("Invalid value for envelope peak: %s\n", value);
+      printf("(Should be between 0 and 1)\n");
+      exit(1);      
+    }
+    instrument[current_inst].envelope[current_wav].peak = val;
+  }
+
+  // set decay (float)
+  else if (strncmp(key, "dec", 3) == 0) {
+    float val = atof(value);
+    if (val < 0) {
+      if (strlen(file)) { printf("(%s): ", file); }
+      printf("Invalid value for envelope decay: %s\n", value);
+      printf("(Should be > 0)\n");
+      exit(1);      
+    }
+    instrument[current_inst].envelope[current_wav].decay = val;
+  }
+
+  // set sustain (float)
+  else if (strncmp(key, "sus", 3) == 0) {
+    float val = atof(value);
+    if (val < 0 || val > 1) {
+      if (strlen(file)) { printf("(%s): ", file); }
+      printf("Invalid value for envelope sustain: %s\n", value);
+      printf("(Should be between 0 and 1)\n");
+      exit(1);      
+    }
+    instrument[current_inst].envelope[current_wav].sustain = val;
+  }
+
+  // set release (float)
+  else if (strncmp(key, "rel", 3) == 0) {
+    float val = atof(value);
+    if (val < 0) {
+      if (strlen(file)) { printf("(%s): ", file); }
+      printf("Invalid value for envelope release: %s\n", value);
+      printf("(Should be > 0)\n");
+      exit(1);      
+    }
+    instrument[current_inst].envelope[current_wav].release = val;
+  }
+
+  // set envelope (all six parameters, float, split on ",/")
 }
 
 void doConfigLine(char* line, const char* file) {

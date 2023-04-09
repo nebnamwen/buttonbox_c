@@ -77,14 +77,16 @@ instrument_t default_instrument = {
   0.2,
   0.0,
   {
-    { 0, 1, 0, 1, 0.25 }, // MAIN ENVELOPE
-    { 0.02, 1, 0.7, 0.6, 999 }, // SINE
+    { 0, 1, 0, 1, 0.1 }, // MAIN ENVELOPE
+    { 0, 1, 0, 1, 999 }, // SINE
     { 0, 0, 0, 0, 999 }, // SQUARE
     { 0, 0, 0, 0, 999 }, // TRIANGLE
-    { 0.3, 0.1, 0.5, 0.6, 999 }, // SAWTOOTH
-    { 0, 1, 0.1, 0, 0.1 }, // NOISE
+    { 0, 0, 0, 0, 999 }, // SAWTOOTH
+    { 0, 0, 0, 0, 999 }, // NOISE
   },
 };
+
+instrument_t instrument[NUM_INSTS];
 
 typedef struct {
   instrument_t instrument;
@@ -96,6 +98,10 @@ typedef struct {
 note_t notes[128];
 
 void initNotes() {
+  for (int i = 0; i < NUM_INSTS; i++) {
+    instrument[i] = default_instrument;
+  }
+
   for (int i = 0; i < 128; i++) {
     notes[i].onset = 0;
     notes[i].offset = 0;
@@ -116,7 +122,7 @@ float envelopeValue(envelope_t envelope, int32_t index, int32_t held) {
     released = 1.0 * (index - held) / SamplesPerSecond;
   }
 
-  if (released >= envelope.release) {
+  if (released > envelope.release) {
     return 0.0;
   }
 
