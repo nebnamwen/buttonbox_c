@@ -95,8 +95,8 @@ int main(int argc, char *argv[]) {
 	  {
 	    int16_t SampleValue = sampleValue(notes[n], RunningSampleIndex + SampleIndex);
 
-	    SampleOut[SampleIndex*2] += SampleValue;
-	    SampleOut[SampleIndex*2 + 1] += SampleValue;
+	    SampleOut[SampleIndex*2] += SampleValue * (1 - notes[n].instrument.pan);
+	    SampleOut[SampleIndex*2 + 1] += SampleValue * (1 + notes[n].instrument.pan);
 	  }
       }
     }
