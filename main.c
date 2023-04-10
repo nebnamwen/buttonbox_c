@@ -27,13 +27,16 @@ int main(int argc, char *argv[]) {
   initKeygrid();
   initNotes();
 
+  // apply config from command line
   for (int i = 1; i < argc; i++) {
     char *arg = argv[i];
     char *pos = strchr(arg, '=');
     if (pos == NULL) { doConfigFile(arg); }
     else { doConfigLine(arg, ""); }
   }
-  
+
+  setDefaultInstrumentIfZero();
+
   initDisplay();
 
   int quit = 0;

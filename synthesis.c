@@ -67,22 +67,26 @@ typedef struct {
   float release;
 } envelope_t;
 
+char envelopeIsNonzero(envelope_t env) {
+  return ((env.attack + env.decay) * env.peak + env.sustain) > 0;
+}
+
 typedef struct {
   float volume;
   float pan;
   envelope_t envelope[NUM_WAVEFORMS + 1];
 } instrument_t;
 
-instrument_t default_instrument = {
+instrument_t zero_instrument = {
   0.2,
   0.0,
   {
-    { 0, 1, 0, 1, 0.1 }, // MAIN ENVELOPE
-    { 0, 1, 0, 1, 999 }, // SINE
-    { 0, 0, 0, 0, 999 }, // SQUARE
-    { 0, 0, 0, 0, 999 }, // TRIANGLE
-    { 0, 0, 0, 0, 999 }, // SAWTOOTH
-    { 0, 0, 0, 0, 999 }, // NOISE
+    { 0, 1, 0, 1, 0.05 }, // MAIN ENVELOPE
+    { 0, 1, 0, 0, 999 }, // SINE
+    { 0, 1, 0, 0, 999 }, // SQUARE
+    { 0, 1, 0, 0, 999 }, // TRIANGLE
+    { 0, 1, 0, 0, 999 }, // SAWTOOTH
+    { 0, 1, 0, 0, 999 }, // NOISE
   },
 };
 
@@ -99,13 +103,23 @@ note_t notes[128];
 
 void initNotes() {
   for (int i = 0; i < NUM_INSTS; i++) {
-    instrument[i] = default_instrument;
+    instrument[i] = zero_instrument;
   }
 
   for (int i = 0; i < 128; i++) {
     notes[i].onset = 0;
     notes[i].offset = 0;
   }
+}
+
+void setDefaultInstrumentIfZero() {
+  for (int i = 1; i <= NUM_WAVEFORMS; i++) {
+    if (envelopeIsNonzero(instrument[0].envelope[i])) {
+      return;
+    }
+  }
+
+  instrument[0].envelope[SINE].sustain = 1;
 }
 
 float envelopeValue(envelope_t envelope, int32_t index, int32_t held) {
@@ -155,7 +169,7 @@ int16_t sampleValue(note_t note, uint32_t index) {
   if (main_env_val > 0) {
     for (int waveform = 1; waveform <= NUM_WAVEFORMS; waveform++) {
       envelope_t wf_env = note.instrument.envelope[waveform];
-      if ((wf_env.attack + wf_env.decay) * wf_env.peak + wf_env.sustain > 0) {
+      if (envelopeIsNonzero(wf_env)) {
 	float wf_env_val = envelopeValue(wf_env, rel_index, held);
 	if (wf_env_val > 0) {
 	  value += 32700 * note.instrument.volume * main_env_val * wf_env_val * waveformValue(waveform, note.frequency, rel_index);
