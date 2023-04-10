@@ -84,29 +84,30 @@ void drawKeyIcon(char grid, char onoff) {
 	    break;
 
 	  case COL_RED:
-	    red = 255;
+	    red = 200;
 	    break;
 
 	  case COL_GREEN:
-	    green = 255;
+	    green = 200;
 	    break;
 
 	  case COL_YELLOW:
-	    red = 255;
-	    green = 255;
+	    red = 200;
+	    green = 180;
 	    break;
 
 	  case COL_BLUE:
+	    green = 75;
 	    blue = 255;
 	    break;
 
 	  case COL_MAGENTA:
-	    red = 255;
+	    red = 200;
 	    blue = 255;
 	    break;
 
 	  case COL_CYAN:
-	    green = 255;
+	    green = 200;
 	    blue = 255;
 	    break;
 
