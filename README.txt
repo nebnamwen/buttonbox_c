@@ -24,9 +24,11 @@ Invoke the built executable `buttonbox` with or without command-line arguments.
 
 Any arguments will be interpreted either as config clauses (if they contain a '=')
 or as files to read and parse for config clauses.  Raw config clauses and config files
-may be freely mixed in one command line and will be parsed in the order provided.
+may be freely mixed in one command line and will be parsed in the order given.
 
 See the sections below for information on config options.
+
+Press the Escape key or close the display window to quit.
 
 == playing ButtonBox ==
 
@@ -87,6 +89,7 @@ origin, transpose -- together determine where on the keyboard
         transpose -- the MIDI note number to assign to the origin key
                      *MIDI note numbers are integers between 0 and 127
                      *middle C is 60 and concert A (440Hz) is 69
+                     *the notes of a piano keyboard run from 21 to 108
 
         for example, to set 'g' to be middle C: origin=0x14 transpose=60
 
@@ -126,7 +129,7 @@ layout -- determines how notes are arranged on the keyboard
 
           0x94 -- harmonic table (puts major and minor triads in clusters);
                   this makes it easy to play chords with one finger,
-                  but unfortunately is very vulnerable to ghosting
+                  but unfortunately is very vulnerable to key ghosting
 
        references:
           https://en.wikipedia.org/wiki/Harpejji
@@ -160,3 +163,123 @@ slant -- a character representing the angle of the line dividing this
          \ -- split along a leftward-slanting line, e.g. z-a-q-1
 
 == configuring instruments ==
+
+Each instrument (keyboard section) can be assigned a different sound.
+
+For inspiring the design choices behind ButtonBox's synthesis configuration,
+I'm indebted to this video (https://www.youtube.com/watch?v=4SBDH5uhs4Q) of
+Wendy Carlos, electronic music pioneer and the first transgender person to
+recieve a Grammy Award, explaining the setup of a Moog analog synthesizer.
+
+(Much of Wendy's discography is now out of print, but I particularly recommend
+the soundtrack from the original TRON film, which is available digitally.)
+
+ButtonBox synthesizes sound directly in software using the most common
+waveforms used in music synthesis, modified by ADSR envelopes.
+
+-- instrument controls --
+
+volume -- the main volume control for the current instrument
+          value: a decimal number between 0 and 1.0
+	  *this is relative to the maximum volume of your device
+           and I recommend keeping it fairly small
+
+pan -- the stereo placement of the current instrument
+       value: a signed decimal number between -1.0 (left) and 1.0 (right)
+
+-- waveforms --
+
+Five basic waveforms are available.  Each instrument can use any combination
+of these waveforms, each with its own envelope.  The instrument also has a
+main envelope which is applied after the waveforms are combined.  For config
+purposes, "main" is treated as another type of waveform when selecting which
+envelope to modify.
+
+waveform -- select the waveform whose envelope will be modified by
+            subsequent config clauses
+
+            values: main | sine | square | triangle | sawtooth | noise
+
+            A sine wave is a clear, pure, flutelike tone.
+
+            Square, triangle, and sawtooth are progressively more reedy
+            or brassy, with more higher harmonics.
+
+            Noise is white noise, sampled at a multiple of the frequency
+            of the note played (different noise notes do have distinct
+            pitches and you can play a melody with them).
+
+-- envelopes --
+
+An envelope is a function that describes the way that a note gets louder and
+softer over time, from the moment the note is struck to when it fades out.
+
+The most common envelope generator used in music synthesis has four parameters:
+attack, decay, sustain, and release.  ButtonBox adds one more parameter, peak.
+
+attack -- the time interval (in seconds) from the moment the note is struck
+          to when a given waveform reaches maximum intensity
+          value: a decimal number >= 0
+
+peak -- the volume of the given waveform at the end of the attack interval
+        value: a decimal number between 0 and 1.0
+
+        *typically the peak of an envelope would always be normalized to 1.0,
+         but with a separate peak parameter you can mix multiple waveforms
+         with different peak intensities in the same instrument configuration
+
+decay -- the time interval (in seconds) it takes the given waveform to decay
+         from peak intensity to a steady-state (sustain) intensity
+         value: a decimal number >= 0
+
+sustain -- the steady-state intensity of the given waveform for the rest of
+           the time that a note is held
+           value: a decimal number between 0 and 1.0
+
+           *despite the names, nothing stops you from making sustain > peak
+
+release -- the time interval (in seconds) it takes for the given waveform
+           to fade to silence after a note is released
+           value: a decimal number >= 0
+
+           *setting release to 0 can result in a click when a note is released
+	    so it's recommended to use a small but positive value even when
+            you want notes to stop "immediately"
+
+envelope -- set all five envelope parameters in one config clause
+            value: five decimal numbers (as above, in the same order)
+                   separated by commas or forward slashes (no whitespace)
+
+-- example instruments --
+
+By default each waveform's envelope is set to constant zero, but can be set
+to another constant value simply by setting the sustain parameter.
+You can use the "main" envelope to control the instrument's envelope shape
+and select a (constant) mix of waveforms by setting sustain only.
+
+Setting more of the envelope parameters for individual waveforms allows you
+to build instruments with more complex sounds that change timbre over time.
+
+simple square wave (using the default main envelope):
+
+    waveform=square sustain=1.0
+
+simple sine wave plus a percussive crunch onset:
+
+    waveform=sine sustain=1.0 waveform=noise envelope=0.01/1/0.02/0/0
+
+snare drum (noise with fast attack, decay, and release):
+
+    waveform=main envelope=0.001/1/0.1/0/0 waveform=noise sustain=1
+
+ocean waves (noise with soft attack, decay, and release):
+
+    wav=main env=0.5/1/0.75/0.5/0.5 wav=noise sus=1
+
+sine into sawtooth (sounds a bit brassy):
+
+    wav=sine env=0/1/0.8/0.5/0.1 wav=saw env=0.8/1/0/1/0.1
+
+triangle and sine with a fast decay (sounds a bit like a plucked string):
+
+    wav=tri env=0.005/1/0.1/0.1/0.1 wav=sine env=0/1/0.3/0.2/0.1
