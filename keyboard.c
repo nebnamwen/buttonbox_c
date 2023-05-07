@@ -3,8 +3,8 @@ typedef struct {
   char slant;
   char color;
   char origin;
-  char transpose;
-  char layout;
+  unsigned char transpose;
+  unsigned char layout;
 } keyboard_t;
 
 #define COL_GRAY 0
