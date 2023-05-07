@@ -215,7 +215,9 @@ An envelope is a function that describes the way that a note gets louder and
 softer over time, from the moment the note is struck to when it fades out.
 
 The most common envelope generator used in music synthesis has four parameters:
-attack, decay, sustain, and release.  ButtonBox adds one more parameter, peak.
+attack, decay, sustain, and release*.  ButtonBox adds one more parameter, peak.
+
+*https://en.wikipedia.org/wiki/Envelope_(music)
 
 attack -- the time interval (in seconds) from the moment the note is struck
           to when a given waveform reaches maximum intensity
