@@ -152,7 +152,7 @@ split -- the key at which to split this keyboard section from the next
 slant -- a character representing the angle of the line dividing this
          keyboard section from the next
 
-         value: one of / | \
+         value: one of / | \ ` ' , .
 
          / -- split along a rightward-slanting line, e.g. z-s-e-4
 
@@ -160,17 +160,32 @@ slant -- a character representing the angle of the line dividing this
 
          \ -- split along a leftward-slanting line, e.g. z-a-q-1
 
+         ` -- split from this key to the left, and all rows above
+
+         ' -- split from this key to the right, and all rows above
+
+         , -- split from this key to the left, and all rows below
+
+         . -- split from this key to the right, and all rows below
+
          *some slant options must be escaped on the command line
 	  to avoid being interpreted as metacharacters by the shell
 
 -- examples of multiple keyboards --
 
-Wicki-Hayden with four distinct octaves:
+Wicki-Hayden with four distinct octaves in left and right halves:
 
     inst=0 split=0x04 slant='|' inst=1 origin=0x06 transpose=60 color=brown
 
     *Wicki-Hayden is the default layout, but when used as a single keyboard
      the upper octave on the left is the same as the lower octave on the right
+
+Piano-like with about three octaves in top and bottom halves:
+
+    layout=0x12 split=0x10 slant=. inst=1 layout=0x12 transpose=54 color=brown
+
+    *without splitting, this layout gives about an octave and a half of range,
+     with the same notes in the bottom two rows repeated in the top two rows
 
 == configuring instruments ==
 

@@ -106,6 +106,26 @@ int keyboardForGrid(char grid) {
       dv = 2;
       break;
 
+    case '`':
+      du = -16;
+      dv = 1;
+      break;
+      
+    case '\'':
+      du = -16;
+      dv = -1;
+      break;
+      
+    case ',':
+      du = 16;
+      dv = 1;
+      break;
+      
+    case '.':
+      du = 16;
+      dv = -1;
+      break;
+      
     default:
       du = 0;
       dv = 1;

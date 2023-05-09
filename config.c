@@ -130,13 +130,13 @@ void doConfigClause(char* clause, const char* file) {
     keyboard[current_inst].split = val;
   }
   
-  // set slant (/|\^_)
+  // set slant (/ | \ ` ' , .)
   else if (strncmp(key, "sla", 3) == 0) {
     char val = value[0];
-    if (strchr("/|\\", val) == NULL) {
+    if (strchr("/|\\`',.", val) == NULL) {
       if (strlen(file)) { printf("(%s): ", file); }
       printf("Invalid value for keyboard split slant: %s\n", value);
-      printf("(Should be one of / | \\)\n");
+      printf("(Should be one of / | \\ ` ' , .)\n");
       exit(1);      
     }
     keyboard[current_inst].slant = val;
