@@ -113,13 +113,21 @@ void initNotes() {
 }
 
 void setDefaultInstrumentIfZero() {
-  for (int i = 1; i <= NUM_WAVEFORMS; i++) {
-    if (envelopeIsNonzero(instrument[0].envelope[i])) {
-      return;
+  for (int i = 0; i <= NUM_INSTS; i++) {
+    if (keyboard[i].is_active) {
+      int is_zero = 1;
+
+      for (int w = 1; w <= NUM_WAVEFORMS; w++) {
+	if (envelopeIsNonzero(instrument[i].envelope[w])) {
+	  is_zero = 0;
+	}
+      }
+
+      if (is_zero) {
+	instrument[i].envelope[SINE].sustain = 1;
+      }
     }
   }
-
-  instrument[0].envelope[SINE].sustain = 1;
 }
 
 float envelopeValue(envelope_t envelope, int32_t index, int32_t held) {

@@ -160,6 +160,18 @@ slant -- a character representing the angle of the line dividing this
 
          \ -- split along a leftward-slanting line, e.g. z-a-q-1
 
+         *some slant options must be escaped on the command line
+	  to avoid being interpreted as metacharacters by the shell
+
+-- examples of multiple keyboards --
+
+Wicki-Hayden with four distinct octaves:
+
+    inst=0 split=0x04 slant='|' inst=1 origin=0x06 transpose=60 color=brown
+
+    *Wicki-Hayden is the default layout, but when used as a single keyboard
+     the upper octave on the left is the same as the lower octave on the right
+
 == configuring instruments ==
 
 Each instrument (keyboard section) can be assigned a different sound.

@@ -1,4 +1,5 @@
 typedef struct {
+  char is_active;
   char split;
   char slant;
   char color;
@@ -16,7 +17,7 @@ typedef struct {
 #define COL_CYAN 6
 #define COL_BROWN 7
 
-keyboard_t default_keyboard = { 0x09, '/', 0, 0x00, 36, 0x72 };
+keyboard_t default_keyboard = { 0, 0x09, '/', 0, 0x00, 36, 0x72 };
 
 #define NUM_INSTS 8
 keyboard_t keyboard[NUM_INSTS];
@@ -29,6 +30,8 @@ void initKeygrid() {
     keyboard[i] = default_keyboard;
   }
 
+  keyboard[0].is_active = 1;
+  
   for (int i = 0; i < 128; i++) {
     keygrid[i] = -1;
   }

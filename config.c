@@ -89,6 +89,7 @@ void doConfigClause(char* clause, const char* file) {
     }
 
     current_inst = val;
+    keyboard[current_inst].is_active = 1;
   }
 
   // set color (cymg)
