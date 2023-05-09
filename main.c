@@ -40,8 +40,8 @@ int main(int argc, char *argv[]) {
   initDisplay();
 
   int quit = 0;
+  int keycode = 0;
   SDL_Event e;
-  SDL_Keycode keysym = 0;
 
   while (! quit) {
     while (SDL_PollEvent(&e)){
@@ -56,23 +56,23 @@ int main(int argc, char *argv[]) {
 	}
 
 	else if (e.key.repeat == 0) {
-	  keysym = e.key.keysym.sym;
-	  if (keysym > 0 && keysym < 128 && keygrid[keysym] != -1) {
-	    notes[keysym].instrument = instrument[keyboardForGrid(keygrid[keysym])];
-	    notes[keysym].frequency = frequencyForNote(noteForGrid(keygrid[keysym]));
-	    notes[keysym].onset = RunningSampleIndex;
-	    notes[keysym].offset = 0;
+	  keycode = e.key.keysym.scancode;
+	  if (keycode > 0 && keycode < 128 && keygrid[keycode] != -1) {
+	    notes[keycode].instrument = instrument[keyboardForGrid(keygrid[keycode])];
+	    notes[keycode].frequency = frequencyForNote(noteForGrid(keygrid[keycode]));
+	    notes[keycode].onset = RunningSampleIndex;
+	    notes[keycode].offset = 0;
 
-	    drawKeyIcon(keygrid[keysym], 1);
+	    drawKeyIcon(keygrid[keycode], 1);
 	  }
 	}
 	break;
 
       case SDL_KEYUP:
-	keysym = e.key.keysym.sym;
-	if (keysym > 0 && keysym < 128 && keygrid[keysym] != -1) {
-	  notes[keysym].offset = RunningSampleIndex;
-	  drawKeyIcon(keygrid[keysym], 0);
+	keycode = e.key.keysym.scancode;
+	if (keycode > 0 && keycode < 128 && keygrid[keycode] != -1) {
+	  notes[keycode].offset = RunningSampleIndex;
+	  drawKeyIcon(keygrid[keycode], 0);
 	}
 	break;
 	
