@@ -92,6 +92,19 @@ void doConfigClause(char* clause, const char* file) {
     keyboard[current_inst].is_active = 1;
   }
 
+  // copy instrument (int < NUM_INSTS)
+  else if (strncmp(key, "cop", 3) == 0) {
+    int val = atoi(value);
+    if (val < 0 || val >= NUM_INSTS) {
+      if (strlen(file)) { printf("(%s): ", file); }
+      printf("Invalid value for source instrument number: %s\n", value);
+      printf("(Should be between 0 and %d)\n", NUM_INSTS - 1);
+      exit(1);
+    }
+
+    instrument[current_inst] = instrument[val];
+  }
+  
   // set color (cymg)
   else if (strncmp(key, "col", 3) == 0) {
     if (strcmp(value, "gray") == 0) { keyboard[current_inst].color = COL_GRAY; }

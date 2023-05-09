@@ -189,6 +189,11 @@ waveforms used in music synthesis, modified by ADSR envelopes.
 
 -- instrument controls --
 
+copy -- copy the entire instrument config from another keyboard
+        (useful when setting up multiple keyboard sections to
+         play the same instrument)
+	value: the instrument to copy from (an integer between 0 and 7)
+
 volume -- the main volume control for the current instrument
           value: a decimal number between 0 and 1.0
 	  *this is relative to the maximum volume of your device
