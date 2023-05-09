@@ -32,8 +32,6 @@ Press the Escape key or close the display window to quit.
 
 == playing ButtonBox ==
 
-Use a QWERTY keyboard setting when playing ButtonBox.
-
 ButtonBox displays a panel of buttons representing part of a computer keyboard.
 The four rows of buttons correspond to the four rows of keys that make up the
 main part of the keyboard and are arranged approximately in a hexagonal grid,
