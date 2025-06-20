@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
 	else if (e.key.repeat == 0) {
 	  keycode = e.key.keysym.scancode;
 	  if (keycode > 0 && keycode < 128 && keygrid[keycode] != -1) {
-	    notes[keycode].instrument = instrument[keyboardForGrid(keygrid[keycode])];
+	    notes[keycode].instrument = keyboardForGrid(keygrid[keycode]);
 	    notes[keycode].frequency = frequencyForNote(noteForGrid(keygrid[keycode]));
 	    notes[keycode].onset = RunningSampleIndex;
 	    notes[keycode].offset = 0;
@@ -91,15 +91,15 @@ int main(int argc, char *argv[]) {
     }
 
     for (int n = 0; n < 128; n++) {
-      if (notes[n].onset) {
+      if (NOTE.onset) {
 	for (int SampleIndex = 0;
 	     SampleIndex < BytesToWrite / BytesPerSample;
 	     ++SampleIndex)
 	  {
-	    int16_t SampleValue = sampleValue(notes[n], RunningSampleIndex + SampleIndex);
+	    int16_t SampleValue = sampleValue(n, RunningSampleIndex + SampleIndex);
 
-	    SampleOut[SampleIndex*2] += SampleValue * (1 - notes[n].instrument.pan);
-	    SampleOut[SampleIndex*2 + 1] += SampleValue * (1 + notes[n].instrument.pan);
+	    SampleOut[SampleIndex*2] += SampleValue * (1 - INST.pan);
+	    SampleOut[SampleIndex*2 + 1] += SampleValue * (1 + INST.pan);
 	  }
       }
     }
@@ -107,8 +107,8 @@ int main(int argc, char *argv[]) {
     RunningSampleIndex += BytesToWrite / BytesPerSample;
 
     for (int n = 0; n < 128; n++) {
-      if (isNoteFinished(notes[n], RunningSampleIndex)) {
-	notes[n].onset = 0;
+      if (isNoteFinished(n, RunningSampleIndex)) {
+	clearNote(n);
       }
     }
 

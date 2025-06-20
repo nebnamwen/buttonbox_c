@@ -16,64 +16,16 @@ char* nexttok(char* start, const char* split) {
   }
 }
 
+#undef INST
+#undef INPUT
+
 int current_inst = 0;
-int current_wav = MAIN;
 
-void setEnvAttack(const char* value, const char* file) {
-  float val = atof(value);
-  if (val < 0) {
-    if (strlen(file)) { printf("(%s): ", file); }
-    printf("Invalid value for envelope attack: %s\n", value);
-    printf("(Should be > 0)\n");
-    exit(1);      
-  }
-  instrument[current_inst].envelope[current_wav].attack = val;
-}
-
-void setEnvPeak(const char* value, const char* file) {
-  float val = atof(value);
-  if (val < 0 || val > 1) {
-    if (strlen(file)) { printf("(%s): ", file); }
-    printf("Invalid value for envelope peak: %s\n", value);
-    printf("(Should be between 0 and 1)\n");
-    exit(1);      
-  }
-  instrument[current_inst].envelope[current_wav].peak = val;
-}
-
-void setEnvDecay(const char* value, const char* file) {
-  float val = atof(value);
-  if (val < 0) {
-    if (strlen(file)) { printf("(%s): ", file); }
-    printf("Invalid value for envelope decay: %s\n", value);
-    printf("(Should be > 0)\n");
-    exit(1);      
-  }
-  instrument[current_inst].envelope[current_wav].decay = val;
-}
-
-void setEnvSustain(const char* value, const char* file) {
-  float val = atof(value);
-  if (val < 0 || val > 1) {
-    if (strlen(file)) { printf("(%s): ", file); }
-    printf("Invalid value for envelope sustain: %s\n", value);
-    printf("(Should be between 0 and 1)\n");
-    exit(1);      
-  }
-  instrument[current_inst].envelope[current_wav].sustain = val;
-}
-
-void setEnvRelease(const char* value, const char* file) {
-  float val = atof(value);
-  if (val < 0) {
-    if (strlen(file)) { printf("(%s): ", file); }
-    printf("Invalid value for envelope release: %s\n", value);
-    printf("(Should be > 0)\n");
-    exit(1);      
-  }
-  instrument[current_inst].envelope[current_wav].release = val;
-}
-
+#define KEYB keyboard[current_inst]
+#define INST instrument[current_inst]
+#define NODE INST.node[node_index]
+#define INPUT(j) NODE.input[j]
+  
 void doConfigClause(char* clause, const char* file) {
   char* key = clause;
   char* value = nexttok(clause, "=");
@@ -89,7 +41,7 @@ void doConfigClause(char* clause, const char* file) {
     }
 
     current_inst = val;
-    keyboard[current_inst].is_active = 1;
+    KEYB.is_active = 1;
   }
 
   // copy instrument (int < NUM_INSTS)
@@ -102,19 +54,20 @@ void doConfigClause(char* clause, const char* file) {
       exit(1);
     }
 
-    instrument[current_inst] = instrument[val];
+    INST = instrument[val];
+    KEYB = keyboard[val];
   }
   
   // set color (cymg)
   else if (strncmp(key, "col", 3) == 0) {
-    if (strcmp(value, "gray") == 0) { keyboard[current_inst].color = COL_GRAY; }
-    else if (strcmp(value, "red") == 0) { keyboard[current_inst].color = COL_RED; }
-    else if (strcmp(value, "green") == 0) { keyboard[current_inst].color = COL_GREEN; }
-    else if (strcmp(value, "yellow") == 0) { keyboard[current_inst].color = COL_YELLOW; }
-    else if (strcmp(value, "blue") == 0) { keyboard[current_inst].color = COL_BLUE; }
-    else if (strcmp(value, "magenta") == 0) { keyboard[current_inst].color = COL_MAGENTA; }
-    else if (strcmp(value, "cyan") == 0) { keyboard[current_inst].color = COL_CYAN; }
-    else if (strcmp(value, "brown") == 0) { keyboard[current_inst].color = COL_BROWN; }
+    if (strcmp(value, "gray") == 0) { KEYB.color = COL_GRAY; }
+    else if (strcmp(value, "red") == 0) { KEYB.color = COL_RED; }
+    else if (strcmp(value, "green") == 0) { KEYB.color = COL_GREEN; }
+    else if (strcmp(value, "yellow") == 0) { KEYB.color = COL_YELLOW; }
+    else if (strcmp(value, "blue") == 0) { KEYB.color = COL_BLUE; }
+    else if (strcmp(value, "magenta") == 0) { KEYB.color = COL_MAGENTA; }
+    else if (strcmp(value, "cyan") == 0) { KEYB.color = COL_CYAN; }
+    else if (strcmp(value, "brown") == 0) { KEYB.color = COL_BROWN; }
 
     else {
       if (strlen(file)) { printf("(%s): ", file); }
@@ -127,7 +80,7 @@ void doConfigClause(char* clause, const char* file) {
   // set split (grid)
   else if (strncmp(key, "spl", 3) == 0) {
     char val = (char)strtol(value, NULL, 0);
-    keyboard[current_inst].split = val;
+    KEYB.split = val;
   }
   
   // set slant (/ | \ ` ' , .)
@@ -139,31 +92,31 @@ void doConfigClause(char* clause, const char* file) {
       printf("(Should be one of / | \\ ` ' , .)\n");
       exit(1);      
     }
-    keyboard[current_inst].slant = val;
+    KEYB.slant = val;
   }
   
   // set origin (grid)
   else if (strncmp(key, "ori", 3) == 0) {
     char val = (char)strtol(value, NULL, 0);
-    keyboard[current_inst].origin = val;
+    KEYB.origin = val;
   }
   
   // set transpose (int)
   else if (strncmp(key, "tra", 3) == 0) {
     char val = (char)atoi(value);
-    keyboard[current_inst].transpose = val;
+    KEYB.transpose = val;
   }
 
   // set origin (grid)
   else if (strncmp(key, "ori", 3) == 0) {
     char val = (char)strtol(value, NULL, 0);
-    keyboard[current_inst].origin = val;
+    KEYB.origin = val;
   }  
 
   // set layout (grid)
   else if (strncmp(key, "lay", 3) == 0) {
     char val = (char)strtol(value, NULL, 0);
-    keyboard[current_inst].layout = val;
+    KEYB.layout = val;
   }
 
   // set volume (float)
@@ -175,7 +128,7 @@ void doConfigClause(char* clause, const char* file) {
       printf("(Should be between 0 and 1)\n");
       exit(1);      
     }
-    instrument[current_inst].volume = val;
+    INST.volume = val;
   }
 
   // set pan (float)
@@ -187,75 +140,104 @@ void doConfigClause(char* clause, const char* file) {
       printf("(Should be between -1 and 1)\n");
       exit(1);      
     }
-    instrument[current_inst].pan = val;
+    INST.pan = val;
   }
 
-  // select waveform (main|sine|square|triangle|sawtooth|noise)
-  else if (strncmp(key, "wav", 3) == 0) {
-    if (strncmp(value, "mai", 3) == 0) { current_wav = MAIN; }
-    else if (strncmp(value, "sin", 3) == 0) { current_wav = SINE; }
-    else if (strncmp(value, "squ", 3) == 0) { current_wav = SQUARE; }
-    else if (strncmp(value, "tri", 3) == 0) { current_wav = TRIANGLE; }
-    else if (strncmp(value, "saw", 3) == 0) { current_wav = SAWTOOTH; }
-    else if (strncmp(value, "noi", 3) == 0) { current_wav = NOISE; }
+  // synthesis node definition
+  if (strlen(key) == 1 && key[0] >= 'A' && key[0] <= 'Z') {
+    char node_index = key[0] - 'A' + 1;
+    if (NODE.type != NO_NODE) {
+      if (strlen(file)) { printf("(%s): ", file); }
+      printf("Node %s of instrument %d already defined\n", key, current_inst);
+      exit(1);
+    }
+
+    if (node_index > instrument[current_inst].max_node) {
+      INST.max_node = node_index;
+    }
+    char* node_key = value;
+    value = nexttok(value, ":");
+
+    int expected_inputs = 0;
+    
+    if (strncmp(node_key, "env", 3) == 0) {
+      NODE.type = ENVELOPE;
+      expected_inputs = 4;
+      INPUT(0).val = 0.05;
+      INPUT(1).val = 0.05;
+      INPUT(2).val = 1.0;
+      INPUT(3).val = 0.1;
+    }
+
+#define WF_DEFAULT() expected_inputs = 2; INPUT(0).addr = PITCH_IN; INPUT(1).val = 1.0;
+    
+    else if (strncmp(node_key, "sin", 3) == 0) { NODE.type = SINE; WF_DEFAULT() }
+    else if (strncmp(node_key, "squ", 3) == 0) { NODE.type = SQUARE; WF_DEFAULT() }
+    else if (strncmp(node_key, "tri", 3) == 0) { NODE.type = TRIANGLE; WF_DEFAULT() }
+    else if (strncmp(node_key, "saw", 3) == 0) { NODE.type = SAWTOOTH; WF_DEFAULT() }
+    else if (strncmp(node_key, "noi", 3) == 0) { NODE.type = NOISE; WF_DEFAULT() }
+
+    else if (strncmp(node_key, "mix", 3) == 0) {
+      NODE.type = MIX;
+      expected_inputs = 4;
+      INPUT(0).val = 0.0;
+      INPUT(1).val = 1.0;
+      INPUT(2).val = 0.0;
+      INPUT(3).val = 1.0;
+    }
+    else if (strncmp(node_key, "exp", 3) == 0) {
+      NODE.type = EXP;
+      expected_inputs = 4;
+      INPUT(0).val = 1.0;
+      INPUT(1).val = M_E;
+      INPUT(2).val = 0.0;
+      INPUT(3).val = 1.0;
+    }
+
+    // else if (strncmp(node_key, "fil", 3) == 0) { }
 
     else {
       if (strlen(file)) { printf("(%s): ", file); }
-      printf("Unknown waveform: %s\n", value);
-      printf("(Should be main/sine/square/triangle/sawtooth/noise)\n");
+      printf("Unknown synthesis node type: %s\n", node_key);
       exit(1);
     }
-  }
 
-  // set attack (float)
-  else if (strncmp(key, "att", 3) == 0) {
-    setEnvAttack(value, file);
-  }
-
-  // set peak (float)
-  else if (strncmp(key, "pea", 3) == 0) {
-    setEnvPeak(value, file);
-  }
-
-  // set decay (float)
-  else if (strncmp(key, "dec", 3) == 0) {
-    setEnvDecay(value, file);
-  }
-
-  // set sustain (float)
-  else if (strncmp(key, "sus", 3) == 0) {
-    setEnvSustain(value, file);
-  }
-
-  // set release (float)
-  else if (strncmp(key, "rel", 3) == 0) {
-    setEnvRelease(value, file);
-  }
-
-  // set envelope (all six parameters, float, split on ",/")
-  else if (strncmp(key, "env", 3) == 0) {
-    char *val[5];
-    for (int i = 0; i < 5; i++) {
-      if (value == NULL) {
-	if (strlen(file)) { printf("(%s): ", file); }
-	printf("Not enough values in envelope specification: %d (expected 5)\n", i);
-	exit(1);
-      }
-      val[i] = value;
+    char* val;
+    for (int i = 0; i < expected_inputs; i++) {
+      if (value == NULL) { break; }
+      val = value;
       value = nexttok(value, ",/");
+
+      if (strlen(val) == 0) { }
+      else if (strlen(val) == 1 && val[0] >= 'A' && val[0] <= 'Z') {
+	char input_addr = val[0] - 'A' + 1;
+	if (input_addr >= node_index) {
+	  if (strlen(file)) { printf("(%s): ", file); }
+	  printf("Node %s references later node %s\n", key, val);
+	}
+	INPUT(i).addr = input_addr;
+      }
+      else if (val[0] == '_') {
+	if (strcmp(val, "_s") == 0) { INPUT(i).val = pow(2, 1.0/12); }
+	else if (strcmp(val, "_e") == 0) { INPUT(i).val = M_E; }
+	else if (strcmp(val, "_p") == 0) { INPUT(i).addr = PITCH_IN; }
+	else {
+	  if (strlen(file)) { printf("(%s): ", file); }
+	  printf("Unknown special value: %s\n", val);
+	  exit(1);
+	}
+      }
+      else {
+	INPUT(i).addr = CONST_IN;
+	INPUT(i).val = atof(val);
+      }
     }
 
     if (value != NULL) {
       if (strlen(file)) { printf("(%s): ", file); }
-      printf("Too many values in envelope specification: %s\n", value);
+      printf("Too many inputs for %s node: %s\n", node_key, value);
       exit(1);
     }
-
-    setEnvAttack(val[0], file);
-    setEnvPeak(val[1], file);
-    setEnvDecay(val[2], file);
-    setEnvSustain(val[3], file);
-    setEnvRelease(val[4], file);
   }
 
   else {

@@ -1,6 +1,48 @@
 int SamplesPerSecond = 44100;
 
-#define MAIN 0
+#define NUM_INPUTS 5
+#define NUM_NODES 26
+
+#define CONST_IN -1
+#define PITCH_IN -2
+
+typedef struct {
+  char addr;
+  float val;
+} input_t;
+
+typedef struct {
+  char type;
+  input_t input[NUM_INPUTS];
+} node_t;
+
+typedef struct {
+  long int i;
+  double f;
+  float out;
+} node_state_t;
+
+typedef struct {
+  float volume;
+  float pan;
+  node_t node[NUM_NODES + 1];
+  char max_node;
+} instrument_t;
+
+instrument_t instrument[NUM_INSTS];
+
+typedef struct {
+  char instrument;
+  float frequency;
+  uint32_t onset;
+  uint32_t offset;
+  node_state_t state[NUM_NODES + 1];
+  uint32_t zeros;
+} note_t;
+
+note_t notes[128];
+
+#define NO_NODE 0
 
 #define SINE 1
 #define SQUARE 2
@@ -8,7 +50,12 @@ int SamplesPerSecond = 44100;
 #define SAWTOOTH 4
 #define NOISE 5
 
-#define NUM_WAVEFORMS 5
+#define ENVELOPE 10
+
+#define MIX 11
+#define EXP 12
+
+#define FILTER 13
 
 #define NOISE_RES 32768
 
@@ -22,10 +69,9 @@ int32_t noiseHash(uint32_t a) {
   return (int32_t)a;
 }
 
-float waveformValue(char waveform, float frequency, uint32_t index) {
-  double phase = fmod(frequency*index/SamplesPerSecond,1.0);
-
+float waveformValue(char waveform, float phase, uint32_t index) {
   switch (waveform) {
+
   case SINE:
     return sin(phase*M_PI*2);
     break;
@@ -43,12 +89,11 @@ float waveformValue(char waveform, float frequency, uint32_t index) {
     break;
 
   case NOISE:
-    phase = 0;
-    double period = 1.0 * SamplesPerSecond / (frequency * 12);
-    uint32_t seed = index / period;
-    phase = (index - seed * period) * 1.0 / period;
-    float result = ((noiseHash(seed) % NOISE_RES) * (1.0 - phase) / NOISE_RES +
-		    (noiseHash(seed + 1) % NOISE_RES) * phase / NOISE_RES);
+    phase = phase * 12;
+    uint32_t seed = (index * 12) + (int)phase;
+    float lerp = phase - (int)phase;
+    float result = ((noiseHash(seed) % NOISE_RES) * (1.0 - lerp) / NOISE_RES +
+		    (noiseHash(seed + 1) % NOISE_RES) * lerp / NOISE_RES);
     return result;
     break;
 
@@ -59,78 +104,7 @@ float waveformValue(char waveform, float frequency, uint32_t index) {
    
 }
 
-typedef struct {
-  float attack;
-  float peak;
-  float decay;
-  float sustain;
-  float release;
-} envelope_t;
-
-char envelopeIsNonzero(envelope_t env) {
-  return ((env.attack + env.decay) * env.peak + env.sustain) > 0;
-}
-
-typedef struct {
-  float volume;
-  float pan;
-  envelope_t envelope[NUM_WAVEFORMS + 1];
-} instrument_t;
-
-instrument_t zero_instrument = {
-  0.2,
-  0.0,
-  {
-    { 0, 1, 0, 1, 0.05 }, // MAIN ENVELOPE
-    { 0, 1, 0, 0, 999 }, // SINE
-    { 0, 1, 0, 0, 999 }, // SQUARE
-    { 0, 1, 0, 0, 999 }, // TRIANGLE
-    { 0, 1, 0, 0, 999 }, // SAWTOOTH
-    { 0, 1, 0, 0, 999 }, // NOISE
-  },
-};
-
-instrument_t instrument[NUM_INSTS];
-
-typedef struct {
-  instrument_t instrument;
-  float frequency;
-  uint32_t onset;
-  uint32_t offset;
-} note_t;
-
-note_t notes[128];
-
-void initNotes() {
-  for (int i = 0; i < NUM_INSTS; i++) {
-    instrument[i] = zero_instrument;
-  }
-
-  for (int i = 0; i < 128; i++) {
-    notes[i].onset = 0;
-    notes[i].offset = 0;
-  }
-}
-
-void setDefaultInstrumentIfZero() {
-  for (int i = 0; i <= NUM_INSTS; i++) {
-    if (keyboard[i].is_active) {
-      int is_zero = 1;
-
-      for (int w = 1; w <= NUM_WAVEFORMS; w++) {
-	if (envelopeIsNonzero(instrument[i].envelope[w])) {
-	  is_zero = 0;
-	}
-      }
-
-      if (is_zero) {
-	instrument[i].envelope[SINE].sustain = 1;
-      }
-    }
-  }
-}
-
-float envelopeValue(envelope_t envelope, int32_t index, int32_t held) {
+float envelopeValue(float attack, float decay, float sustain, float release, int32_t index, int32_t held) {
   float value = 0.0;
   float released = 0.0;
 
@@ -144,51 +118,138 @@ float envelopeValue(envelope_t envelope, int32_t index, int32_t held) {
     released = 1.0 * (index - held) / SamplesPerSecond;
   }
 
-  if (released > envelope.release) {
+  if (released > release) {
     return 0.0;
   }
 
   float seconds = 1.0 * lookup / SamplesPerSecond;
-  if (seconds < envelope.attack) {
-    value = envelope.peak * seconds / envelope.attack;
+  if (seconds < attack) {
+    value = seconds / attack;
   }
-  else if (seconds < envelope.attack + envelope.decay) {
-    value = envelope.peak - ((seconds - envelope.attack) / envelope.decay) * (envelope.peak - envelope.sustain);
+  else if (seconds < attack + decay) {
+    float lerp = (seconds - attack) / decay;
+    value = (1.0 - lerp) + lerp * sustain;
   }
   else {
-    value = envelope.sustain;
+    value = sustain;
   }
 
   if (released > 0) {
-    value *= 1.0 - released / envelope.release;
+    value *= 1.0 - released / release;
   }
 
   return value;
 }
 
-int16_t sampleValue(note_t note, uint32_t index) {
-  int16_t value = 0;
+#define NOTE notes[n]
 
-  int32_t rel_index = index - note.onset;
-  int32_t held = note.offset - note.onset;
+#define INST instrument[NOTE.instrument]
 
-  float main_env_val = envelopeValue(note.instrument.envelope[MAIN], rel_index, held);
+#define INPUT(j) (node.input[j].addr == CONST_IN ? node.input[j].val : \
+		  node.input[j].addr == PITCH_IN ? NOTE.frequency :    \
+		  NOTE.state[node.input[j].addr].out)
 
-  if (main_env_val > 0) {
-    for (int waveform = 1; waveform <= NUM_WAVEFORMS; waveform++) {
-      envelope_t wf_env = note.instrument.envelope[waveform];
-      if (envelopeIsNonzero(wf_env)) {
-	float wf_env_val = envelopeValue(wf_env, rel_index, held);
-	if (wf_env_val > 0) {
-	  value += 32700 * note.instrument.volume * main_env_val * wf_env_val * waveformValue(waveform, note.frequency, rel_index);
+#define STATE NOTE.state[i]
+
+int16_t sampleValue(char n, uint32_t index) {
+  for (int i = 1; i <= INST.max_node; i++) {
+    node_t node = INST.node[i];
+
+    switch(node.type) {
+
+    case SINE:
+    case SQUARE:
+    case TRIANGLE:
+    case SAWTOOTH:
+    case NOISE:
+      {
+	STATE.f += INPUT(0)/SamplesPerSecond;
+	if (STATE.f > 1.0) {
+	  STATE.f -= 1.0;
+	  STATE.i += 1;
 	}
+	STATE.out = INPUT(1) * waveformValue(node.type, STATE.f, STATE.i);
+	break;
+      }
+
+    case ENVELOPE:
+      {
+	int32_t rel_index = index - NOTE.onset;
+	int32_t held = NOTE.offset - NOTE.onset;
+	STATE.out = envelopeValue(INPUT(0), INPUT(1), INPUT(2), INPUT(3), rel_index, held);
+	if (rel_index == 0 || rel_index == held) {
+	  STATE.f = STATE.out;
+	}
+	break;
+      }
+
+    case MIX:
+      STATE.out = INPUT(0) * INPUT(1) + INPUT(2) * INPUT(3);
+      break;
+
+    case EXP:
+      STATE.out = INPUT(0) * pow(INPUT(1), INPUT(2) * INPUT(3));
+      break;
+
+    case FILTER:
+      // TODO
+
+    case NO_NODE:
+    default:
+      STATE.out = 0;
+    }
+  }
+  int32_t value = 32700 * INST.volume * NOTE.state[INST.max_node].out;
+  if (value == 0) {
+    NOTE.zeros += 1;
+  }
+  else {
+    NOTE.zeros = 0;
+  }
+
+  return value;
+}
+
+#define NOTE_OFF_THRESHOLD 0.25 * SamplesPerSecond
+
+char isNoteFinished(char n, uint32_t index) {
+  return index - NOTE.onset > NOTE_OFF_THRESHOLD && NOTE.zeros > NOTE_OFF_THRESHOLD;
+}
+
+void clearNote(int n) {
+    NOTE.onset = 0;
+    NOTE.offset = 0;
+    NOTE.zeros = 0;
+    for (int i = 0; i <= NUM_NODES; i++) {
+      STATE.i = 0;
+      STATE.f = 0;
+      STATE.out = 0;
+    }
+}
+
+void initNotes() {
+  for (int i = 0; i < NUM_INSTS; i++) {
+    instrument[i].volume = 0.2;
+    instrument[i].pan = 0;
+    instrument[i].max_node = 0;
+    for (int j = 0; j <= NUM_NODES; j++) {
+      instrument[i].node[j].type = NO_NODE;
+      for (int k = 0; k < NUM_INPUTS; k++) {
+	instrument[i].node[j].input[k].addr = CONST_IN;
+	instrument[i].node[j].input[k].val = 0;	
       }
     }
   }
 
-  return value;
+  for (int n = 0; n < 128; n++) {
+    clearNote(n);
+  }
 }
 
-char isNoteFinished(note_t note, uint32_t index) {
-  return note.offset && index - note.offset > note.instrument.envelope[MAIN].release * SamplesPerSecond;
+void setDefaultInstrumentIfZero() {
+  for (int i = 0; i <= NUM_INSTS; i++) {
+    if (keyboard[i].is_active && instrument[i].max_node == 0) {
+      // TODO
+    }
+  }
 }
