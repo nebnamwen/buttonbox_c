@@ -144,7 +144,7 @@ void doConfigClause(char* clause, const char* file) {
   }
 
   // synthesis node definition
-  if (strlen(key) == 1 && key[0] >= 'A' && key[0] <= 'Z') {
+  else if (strlen(key) == 1 && key[0] >= 'A' && key[0] <= 'Z') {
     char node_index = key[0] - 'A' + 1;
     if (NODE.type != NO_NODE) {
       if (strlen(file)) { printf("(%s): ", file); }
@@ -273,3 +273,12 @@ void doConfigFile(const char* file) {
   fclose(fp);
 }
 
+void setDefaultInstrumentIfZero() {
+  char buffer[] = "inst=N A=env B=sin:A\n";
+  for (int i = 0; i < NUM_INSTS; i++) {
+    if (keyboard[i].is_active && instrument[i].max_node == 0) {
+      sprintf(buffer, "inst=%d A=env B=sin:A\n", i);
+      doConfigLine(buffer, "");
+    }
+  }
+}

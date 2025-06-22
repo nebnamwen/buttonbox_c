@@ -245,11 +245,3 @@ void initNotes() {
     clearNote(n);
   }
 }
-
-void setDefaultInstrumentIfZero() {
-  for (int i = 0; i <= NUM_INSTS; i++) {
-    if (keyboard[i].is_active && instrument[i].max_node == 0) {
-      // TODO
-    }
-  }
-}
