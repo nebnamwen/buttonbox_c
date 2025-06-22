@@ -3,7 +3,7 @@ char* nexttok(char* start, const char* split) {
     start++;
   }
 
-  while (*start != '\0' && strchr(split, *start) != NULL) {
+  if (*start != '\0' && strchr(split, *start) != NULL) {
     *start = '\0';
     start++;
   }
@@ -55,7 +55,7 @@ void doConfigClause(char* clause, const char* file) {
     }
 
     INST = instrument[val];
-    KEYB = keyboard[val];
+    KEYB.layout = keyboard[val].layout;
   }
   
   // set color (cymg)
@@ -252,7 +252,7 @@ void doConfigLine(char* line, const char* file) {
 
   do {
     char* current = line;
-    line = nexttok(line, " \t\n");
+    do { line = nexttok(line, " \t\n"); } while (line != NULL && strchr(" \t\n", line[0]) != NULL);
     doConfigClause(current, file);
   } while (line != NULL);
 }
