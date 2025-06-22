@@ -42,7 +42,8 @@ void teardownSDL() {
 void drawKeyIcon(char grid, char onoff) {
   int kb = keyboardForGrid(grid);
   int is_white = isWhiteKey(noteForGrid(grid));
-
+  int is_root = isRootKey(grid);
+  
   int row = 3 - (grid / 16);
   int halfcol = (grid % 16) * 2 + row;
 
@@ -59,6 +60,9 @@ void drawKeyIcon(char grid, char onoff) {
 
   int inradius = 20 + 5*onoff;
   inradius *= inradius; // square for distance calculation
+
+  int dotradius = 8 + 3*onoff;
+  dotradius *= dotradius; // square for distance calculation
   
   for (int dy = 0; dy < 80; dy++) {
     for (int dx = 0; dx < 80; dx++) {
@@ -118,7 +122,7 @@ void drawKeyIcon(char grid, char onoff) {
 	  }
 	}
 	else {
-	  if (is_white) {
+	  if (is_white != (is_root && pixradius < dotradius)) {
 	    red = 255;
 	    green = 255;
 	    blue = 255;

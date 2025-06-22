@@ -17,7 +17,7 @@ typedef struct {
 #define COL_CYAN 6
 #define COL_BROWN 7
 
-keyboard_t default_keyboard = { 0, 0x09, '/', 0, 0x00, 36, 0x72 };
+keyboard_t default_keyboard = { 0, 0x09, '/', COL_GRAY, 0x00, 36, 0x72 };
 
 #define NUM_INSTS 8
 keyboard_t keyboard[NUM_INSTS];
@@ -156,4 +156,10 @@ float frequencyForNote(int note_number) {
 char isWhiteKey(int note_number) {
   char mod = note_number % 12;
   return (mod % 2) == (mod >= 5);  
+}
+
+char isRootKey(char grid) {
+  int kb = keyboardForGrid(grid);
+  int note = noteForGrid(grid);
+  return note % 12 == keyboard[kb].transpose % 12;
 }
