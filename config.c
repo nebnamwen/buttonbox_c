@@ -169,8 +169,8 @@ void doConfigClause(char* clause, const char* file) {
       INPUT(3).val = 0.1;
     }
 
-#define WF_DEFAULT() expected_inputs = 2; INPUT(0).addr = PITCH_IN; INPUT(1).val = 1.0;
-    
+#define WF_DEFAULT() expected_inputs = 2; INPUT(0).val = 1.0; INPUT(1).addr = PITCH_IN;
+
     else if (strncmp(node_key, "sin", 3) == 0) { NODE.type = SINE; WF_DEFAULT() }
     else if (strncmp(node_key, "squ", 3) == 0) { NODE.type = SQUARE; WF_DEFAULT() }
     else if (strncmp(node_key, "tri", 3) == 0) { NODE.type = TRIANGLE; WF_DEFAULT() }

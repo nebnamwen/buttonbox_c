@@ -163,12 +163,12 @@ int16_t sampleValue(char n, uint32_t index) {
     case SAWTOOTH:
     case NOISE:
       {
-	STATE.f += INPUT(0)/SamplesPerSecond;
+	STATE.f += INPUT(1)/SamplesPerSecond;
 	if (STATE.f > 1.0) {
 	  STATE.f -= 1.0;
 	  STATE.i += 1;
 	}
-	STATE.out = INPUT(1) * waveformValue(node.type, STATE.f, STATE.i);
+	STATE.out = INPUT(0) * waveformValue(node.type, STATE.f, STATE.i);
 	break;
       }
 
