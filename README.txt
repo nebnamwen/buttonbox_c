@@ -1,4 +1,5 @@
-ButtonBox is a simple digital synthesizer with a configurable keyboard interface.
+ButtonBox is a simple digital synthesizer with a configurable keyboard interface
+and modular software-defined intruments.
 
 ButtonBox is implemented in C by Benjamin Newman and is free to use and modify.
 Source code can be found at https://github.com/nebnamwen/buttonbox_c
@@ -40,10 +41,9 @@ i.e. with the keys in each row offset by half from the keys in the next row.
 Play the instrument using the keyboard -- the display is for visual feedback only
 and cannot be interacted with using a pointing device.
 
-White and black keys (as on a piano) are distinguished visually.
+White and black keys (as on a piano) are distinguished visually, and the
+root note of the scale (C by default, but configurable) is marked with a dot.
 The layout of the keyboard can be configured in a number of ways (see below).
-
-*Text labels identifying each note may be added in a future update.
 
 -- key ghosting --
 
@@ -61,6 +61,8 @@ ghost on the keyboard you have.
 
 ButtonBox accepts configuration in the form of key=value clauses,
 which can be provided directly on the command line or in files.
+Clauses are separated by whitespace.  Blank lines or lines beginning
+with a # are ignored.
 
 The key and value must be separated by a '=' sign (no whitespace),
 and only the first three letters of the key are significant.
@@ -90,6 +92,9 @@ origin, transpose -- together determine where on the keyboard
                      *the notes of a piano keyboard run from 21 to 108
 
         for example, to set 'g' to be middle C: origin=0x14 transpose=60
+
+        origin also determines which keys will be displayed with a dot
+        indicating the root of the scale
 
         twelve even-tempered notes per octave is the only supported scale
 
@@ -199,119 +204,170 @@ recieve a Grammy Award, explaining the setup of a Moog analog synthesizer.
 (Much of Wendy's discography is now out of print, but I particularly recommend
 the soundtrack from the original TRON film, which is available digitally.)
 
-ButtonBox synthesizes sound directly in software using the most common
-waveforms used in music synthesis, modified by ADSR envelopes.
-
 -- instrument controls --
 
-copy -- copy the entire instrument config from another keyboard
-        (useful when setting up multiple keyboard sections to
-         play the same instrument)
-	value: the instrument to copy from (an integer between 0 and 7)
+copy -- copy another instrument's synthesizer config and keyboard layout
+        (useful when setting up multiple keyboards to play the same instrument)
+	value: the other config to copy from (an integer between 0 and 7)
 
 volume -- the main volume control for the current instrument
           value: a decimal number between 0 and 1.0
-	  *this is relative to the maximum volume of your device
+          default: 0.2
+	  *this is relative to the current volume of your device
            and I recommend keeping it fairly small
 
 pan -- the stereo placement of the current instrument
        value: a signed decimal number between -1.0 (left) and 1.0 (right)
+       default: 0
 
--- waveforms --
+== synthesis nodes ==
 
-Five basic waveforms are available.  Each instrument can use any combination
-of these waveforms, each with its own envelope.  The instrument also has a
-main envelope which is applied after the waveforms are combined.  For config
-purposes, "main" is treated as another type of waveform when selecting which
-envelope to modify.
+The sound-generating function of each instrument is defined as a
+collection of nodes that are linked together.
 
-waveform -- select the waveform whose envelope will be modified by
-            subsequent config clauses
+Nodes include envelope generators (used to control volume over time),
+waveform generators (used to generate an instrument's particular sound),
+and math nodes which allow the outputs of other nodes to be combined and
+modified in various ways.
 
-            values: main | sine | square | triangle | sawtooth | noise
+The syntax of a node definition is like this: A=type:input,input,input
 
-            A sine wave is a clear, pure, flutelike tone.
+Each node is identified by a capital letter from A to Z, a node type, and a
+list of input parameters.  As with config keys, only the first three letters
+of the node type are used.
 
-            Square, triangle, and sawtooth are progressively more reedy
-            or brassy, with more higher harmonics.
+Each input can be any of the following:
+  - a numerical constant, as a decimal number
+  - the output of another node, identified by its letter
+  - one of a small number of special values, beginning with an underscore:
+    _s: a semitone (the 12th root of 2)
+    _e: e, the root of the natural logarithm
+    _p: the pitch of the current note, in Hz
 
-            Noise is white noise, sampled at a multiple of the frequency
-            of the note played (different noise notes do have distinct
-            pitches and you can play a melody with them).
+Nodes are evaluated in order and can only reference earlier nodes as inputs.
+
+Different types of nodes accept different numbers of inputs and interpret
+those inputs differently.  Each input also has a default value depending on
+the node type. To leave an input at its default value, it can be left blank.
+
+For example:
+    A=env      -- an envelope with all the default values
+    B=sin:,4   -- a sine waveform with the default amplitude (1.0)
+                    and frequency 4 Hz (e.g. to modify pitch for vibrato)
+    C=mix:A,B  -- a mixer with A and B as its first and second inputs (multiply)
+    D=mix:A,,C -- a mixer with A and C as its first and third inputs (add)
+
+Each type of node is explained in more detail below.
+
+The output of the instrument is the value of the (alphabetically) last node,
+multiplied by the instrument's volume setting, and placed in stereo space
+according to the instrument's pan setting.
 
 -- envelopes --
 
+A=env:attack,decay,sustain,release
+
 An envelope is a function that describes the way that a note gets louder and
 softer over time, from the moment the note is struck to when it fades out.
+By combining nodes, it can also be used to control other effects that change
+intensity over time.
 
 The most common envelope generator used in music synthesis has four parameters:
-attack, decay, sustain, and release*.  ButtonBox adds one more parameter, peak.
+attack, decay, sustain, and release*.
 
 *https://en.wikipedia.org/wiki/Envelope_(music)
 
 attack -- the time interval (in seconds) from the moment the note is struck
-          to when a given waveform reaches maximum intensity
+          to when it reaches maximum intensity
           value: a decimal number >= 0
+          default: 0.05
 
-peak -- the volume of the given waveform at the end of the attack interval
-        value: a decimal number between 0 and 1.0
-
-        *typically the peak of an envelope would always be normalized to 1.0,
-         but with a separate peak parameter you can mix multiple waveforms
-         with different peak intensities in the same instrument configuration
-
-decay -- the time interval (in seconds) it takes the given waveform to decay
+decay -- the time interval (in seconds) it takes the envelope to decay
          from peak intensity to a steady-state (sustain) intensity
          value: a decimal number >= 0
+         default: 0.05
 
-sustain -- the steady-state intensity of the given waveform for the rest of
+sustain -- the steady-state intensity of the envelope for the rest of
            the time that a note is held
            value: a decimal number between 0 and 1.0
+           default: 1.0
 
-           *despite the names, nothing stops you from making sustain > peak
-
-release -- the time interval (in seconds) it takes for the given waveform
+release -- the time interval (in seconds) it takes for the envelope
            to fade to silence after a note is released
            value: a decimal number >= 0
+           default: 0.1
 
            *setting release to 0 can result in a click when a note is released
 	    so it's recommended to use a small but positive value even when
             you want notes to stop "immediately"
 
-envelope -- set all five envelope parameters in one config clause
-            value: five decimal numbers (as above, in the same order)
-                   separated by commas or forward slashes (no whitespace)
+-- waveforms --
 
--- example instruments --
+B=sine:amplitude,pitch
 
-By default each waveform's envelope is set to constant zero, but can be set
-to another constant value simply by setting the sustain parameter.
-You can use the "main" envelope to control the instrument's envelope shape
-and select a (constant) mix of waveforms by setting sustain only.
+- The default amplitude is 1.0
+- The default pitch is _p, the pitch of the current note
 
-Setting more of the envelope parameters for individual waveforms allows you
-to build instruments with more complex sounds that change timbre over time.
+types: sine | square | triangle | sawtooth | noise
 
-simple square wave (using the default main envelope):
+  - A sine wave is a clear, pure, flutelike tone.
 
-    waveform=square sustain=1.0
+  - Square, triangle, and sawtooth are progressively more reedy
+      or brassy, with more higher harmonics.
 
-simple sine wave plus a percussive crunch onset:
+  - Noise is white noise, sampled at a multiple of the frequency
+      of the note played (different noise notes do have distinct
+      pitches and you can play a melody with them).
 
-    waveform=sine sustain=1.0 waveform=noise envelope=0.01/1/0.02/0/0
+-- math nodes --
+
+A mixer node multiplies and adds its inputs, returning a*b + c*d
+
+F=mix:A,B,C,D
+
+The default inputs are 0,1,0,1
+  - so mix:A,B multiplies its inputs
+    and mix:A,,B (omitting the second input) adds them
+
+An exponential node raises one input to the power of another, with
+additional inputs allowing common use cases to be expressed as one node.
+It returns a * b^(c*d)
+
+G=exp:_p,_s,A,3
+
+This example multiplies the current pitch by a semitone raised to the
+power 3 times the input A, which is to say it generates a pitch bend
+of up to a minor third.
+
+The default values are 1,_e,0,1
+  - so exp:,,A is e^A
+
+== example instruments ==
+
+-- simple waveforms --
+
+simple square wave (using the default envelope):
+
+    A=env B=square:A
 
 snare drum (noise with fast attack, decay, and release):
 
-    waveform=main envelope=0.001/1/0.1/0/0 waveform=noise sustain=1
+    A=env:0.001,0.1,0,0 B=noise:A
 
 ocean waves (noise with soft attack, decay, and release):
 
-    wav=main env=0.5/1/0.75/0.5/0.5 wav=noise sus=1
+    A=env:0.5,0.75,0.5,0.5 B=noise:A
+
+-- mixes of two waveforms --
+
+sine wave plus a percussive crunch onset:
+
+    A=env B=sin:A C=env:0.01,0.02,0,0 D=noise:C E=mix:B,,D
 
 sine into sawtooth (sounds a bit brassy):
 
-    wav=sine env=0/1/0.8/0.5/0.1 wav=saw env=0.8/1/0/1/0.1
+    A=env:0,0.8,0.5,0.1  B=sin:A C=env:0.8/0/1/0.1 D=saw:C E=mix:B,,D
 
 triangle and sine with a fast decay (sounds a bit like a plucked string):
 
-    wav=tri env=0.005/1/0.1/0.1/0.1 wav=sine env=0/1/0.3/0.2/0.1
+    A=env:0.005,0.1,0.1,0.1  B=tri:A C=env:0,0.3,0.2,0.1 D=sin:C E=mix:B,,D
