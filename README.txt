@@ -342,6 +342,20 @@ of up to a minor third.
 The default values are 1,_e,0,1
   - so exp:,,A is e^A
 
+-- filters --
+
+A filter node modifies a signal by attenuating (partially removing)
+frequencies above or below a cutoff or threshold frequency.
+
+J=low:signal,cutoff
+K=high:signal,cutoff
+
+There are many ways to implement filters and I've chosen the simplest,
+which doesn't completely remove frequencies close to the threshold.
+It can help to run a signal through multiple copies of the same filter.
+
+The default cutoff frequency is the pitch of the current note.
+
 == example instruments ==
 
 -- simple waveforms --
