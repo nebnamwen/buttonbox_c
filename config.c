@@ -258,6 +258,7 @@ void doConfigLine(char* line, const char* file) {
 }
 
 void doConfigFile(const char* file) {
+  if (strchr("#\n", file[0]) != NULL) { return; }
   char line[256] = { 0 };
   FILE *fp = fopen(file, "r");
   if (fp == NULL) {
