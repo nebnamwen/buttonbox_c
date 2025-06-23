@@ -55,7 +55,8 @@ note_t notes[128];
 #define MIX 11
 #define EXP 12
 
-#define FILTER 13
+#define LOWPASS 13
+#define HIGHPASS 14
 
 #define NOISE_RES 32768
 
@@ -191,8 +192,23 @@ int16_t sampleValue(char n, uint32_t index) {
       STATE.out = INPUT(0) * pow(INPUT(1), INPUT(2) * INPUT(3));
       break;
 
-    case FILTER:
-      // TODO
+    case LOWPASS:
+      {
+	float alpha = M_PI*2 * INPUT(1)/SamplesPerSecond;
+	STATE.f *= 1.0 - alpha;
+	STATE.f += alpha * INPUT(0);
+	STATE.out = STATE.f;
+	break;
+      }
+
+    case HIGHPASS:
+      {
+	float alpha = SamplesPerSecond / (M_PI*2 * INPUT(1));
+	alpha = alpha/(alpha + 1.0);
+	STATE.out = alpha * (STATE.out + INPUT(0) - STATE.f);
+	STATE.f = INPUT(0);
+	break;
+      }
 
     case NO_NODE:
     default:

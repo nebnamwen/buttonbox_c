@@ -169,13 +169,16 @@ void doConfigClause(char* clause, const char* file) {
       INPUT(3).val = 0.1;
     }
 
-#define WF_DEFAULT() expected_inputs = 2; INPUT(0).val = 1.0; INPUT(1).addr = PITCH_IN;
+#define WF_DEFAULT(t,d) NODE.type = t; expected_inputs = 2; INPUT(0).val = d; INPUT(1).addr = PITCH_IN;
 
-    else if (strncmp(node_key, "sin", 3) == 0) { NODE.type = SINE; WF_DEFAULT() }
-    else if (strncmp(node_key, "squ", 3) == 0) { NODE.type = SQUARE; WF_DEFAULT() }
-    else if (strncmp(node_key, "tri", 3) == 0) { NODE.type = TRIANGLE; WF_DEFAULT() }
-    else if (strncmp(node_key, "saw", 3) == 0) { NODE.type = SAWTOOTH; WF_DEFAULT() }
-    else if (strncmp(node_key, "noi", 3) == 0) { NODE.type = NOISE; WF_DEFAULT() }
+    else if (strncmp(node_key, "sin", 3) == 0) { WF_DEFAULT(SINE,1) }
+    else if (strncmp(node_key, "squ", 3) == 0) { WF_DEFAULT(SQUARE,1) }
+    else if (strncmp(node_key, "tri", 3) == 0) { WF_DEFAULT(TRIANGLE,1) }
+    else if (strncmp(node_key, "saw", 3) == 0) { WF_DEFAULT(SAWTOOTH,1) }
+    else if (strncmp(node_key, "noi", 3) == 0) { WF_DEFAULT(NOISE,1) }
+
+    else if (strncmp(node_key, "low", 3) == 0) { WF_DEFAULT(LOWPASS,0) }
+    else if (strncmp(node_key, "high", 3) == 0) { WF_DEFAULT(HIGHPASS,0) }
 
     else if (strncmp(node_key, "mix", 3) == 0) {
       NODE.type = MIX;
@@ -193,8 +196,6 @@ void doConfigClause(char* clause, const char* file) {
       INPUT(2).val = 0.0;
       INPUT(3).val = 1.0;
     }
-
-    // else if (strncmp(node_key, "fil", 3) == 0) { }
 
     else {
       if (strlen(file)) { printf("(%s): ", file); }
