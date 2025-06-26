@@ -1,8 +1,8 @@
 # Makefile for buttonbox
 
 # Define the variables conventionally used for the C compiler and linker
-CFLAGS = $(shell sdl2-config --cflags)
-LDLIBS = $(shell sdl2-config --libs) -lm
+CFLAGS = $(shell pkg-config sdl3 --cflags)
+LDLIBS = $(shell pkg-config sdl3 --libs) -lm
 CC     = gcc
 
 # Rule to make buttonbox.  Note that on Linux Mint, and probably most Linuxes,

@@ -7,32 +7,33 @@ int TargetQueueBytes;
 
 unsigned char screenpixels[360][1024][4];
 
+SDL_AudioStream *stream;
+
 void setupSDL() {
   SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
 
-  sdl_win = SDL_CreateWindow("ButtonBox", 0, 0, 1024, 360, 0);
-  sdl_ren = SDL_CreateRenderer(sdl_win, -1, 0);
-  sdl_tex = SDL_CreateTexture(sdl_ren, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STATIC, 1024, 360);
+  sdl_win = SDL_CreateWindow("ButtonBox", 1024, 360, 0);
+  sdl_ren = SDL_CreateRenderer(sdl_win, NULL);
+  sdl_tex = SDL_CreateTexture(sdl_ren, SDL_PIXELFORMAT_XRGB8888, SDL_TEXTUREACCESS_STATIC, 1024, 360);
 
   memset(screenpixels, 0, 1024 * 360 * 4);
 
-  int BufferSamples = 512;
+  int BufferSamples = 1024;
   SDL_AudioSpec AudioSettings = {0};
 
   AudioSettings.freq = SamplesPerSecond;
-  AudioSettings.format = AUDIO_S16;
+  AudioSettings.format = SDL_AUDIO_S16;
   AudioSettings.channels = 2;
-  AudioSettings.samples = BufferSamples;
 
-  SDL_OpenAudio(&AudioSettings, 0);
+  stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &AudioSettings, NULL, NULL);
 
-  TargetQueueBytes = AudioSettings.samples * BytesPerSample;
+  TargetQueueBytes = BufferSamples * BytesPerSample;
 
-  SDL_PauseAudio(0);
+  SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(stream));
 }
 
 void teardownSDL() {
-  SDL_CloseAudio();
+  SDL_CloseAudioDevice(SDL_GetAudioStreamDevice(stream));
   SDL_DestroyRenderer(sdl_ren);
   SDL_DestroyTexture(sdl_tex);
   SDL_DestroyWindow(sdl_win);
@@ -148,6 +149,6 @@ void initDisplay() {
 void updateDisplay() {
   SDL_UpdateTexture(sdl_tex, NULL, screenpixels, 1024*4);
   SDL_RenderClear(sdl_ren);
-  SDL_RenderCopy(sdl_ren, sdl_tex, NULL, NULL);
+  SDL_RenderTexture(sdl_ren, sdl_tex, NULL, NULL);
   SDL_RenderPresent(sdl_ren);
 }

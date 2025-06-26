@@ -1,10 +1,11 @@
-#include "SDL.h"
 #include "stdio.h"
 #include "stdlib.h"
 #include "stdint.h"
 #include "string.h"
 #include "time.h"
 #include "math.h"
+
+#include "SDL3/SDL.h"
 
 #include "keyboard.c"
 
@@ -46,17 +47,17 @@ int main(int argc, char *argv[]) {
   while (! quit) {
     while (SDL_PollEvent(&e)){
       switch (e.type) {
-      case SDL_QUIT:
+      case SDL_EVENT_QUIT:
         quit = 1;
         break;
 
-      case SDL_KEYDOWN:
-	if (e.key.keysym.sym == SDLK_ESCAPE) {
+      case SDL_EVENT_KEY_DOWN:
+	if (e.key.key == SDLK_ESCAPE) {
 	  quit = 1;
 	}
 
 	else if (e.key.repeat == 0) {
-	  keycode = e.key.keysym.scancode;
+	  keycode = e.key.scancode;
 	  if (keycode > 0 && keycode < 128 && keygrid[keycode] != -1) {
 	    notes[keycode].instrument = keyboardForGrid(keygrid[keycode]);
 	    notes[keycode].frequency = frequencyForNote(noteForGrid(keygrid[keycode]));
@@ -68,8 +69,8 @@ int main(int argc, char *argv[]) {
 	}
 	break;
 
-      case SDL_KEYUP:
-	keycode = e.key.keysym.scancode;
+      case SDL_EVENT_KEY_UP:
+	keycode = e.key.scancode;
 	if (keycode > 0 && keycode < 128 && keygrid[keycode] != -1) {
 	  notes[keycode].offset = RunningSampleIndex;
 	  drawKeyIcon(keygrid[keycode], 0);
@@ -80,7 +81,7 @@ int main(int argc, char *argv[]) {
 
     }
 
-    int BytesToWrite = TargetQueueBytes - SDL_GetQueuedAudioSize(1);
+    int BytesToWrite = TargetQueueBytes - SDL_GetAudioStreamQueued(stream);
     // printf("%i\n", BytesToWrite);
 
     for (int SampleIndex = 0;
@@ -112,7 +113,7 @@ int main(int argc, char *argv[]) {
       }
     }
 
-    SDL_QueueAudio(1, SoundBuffer, BytesToWrite);
+    SDL_PutAudioStreamData(stream, SoundBuffer, BytesToWrite);
 
     updateDisplay();
 
