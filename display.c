@@ -2,7 +2,11 @@ SDL_Window *sdl_win;
 SDL_Renderer *sdl_ren;
 SDL_Texture *sdl_tex;
 
-int BytesPerSample = sizeof(int16_t) * 2;
+#include <assert.h> // Required for static_assert
+// This will cause a compile-time error if sizeof(float) is not 4 bytes.
+_Static_assert(sizeof(float) == 4, "float is not 4 bytes on this system!");
+
+int BytesPerSample = sizeof(float) * 2;
 int TargetQueueBytes;
 
 unsigned char screenpixels[360][1024][4];
@@ -22,7 +26,7 @@ void setupSDL() {
   SDL_AudioSpec AudioSettings = {0};
 
   AudioSettings.freq = SamplesPerSecond;
-  AudioSettings.format = SDL_AUDIO_S16;
+  AudioSettings.format = SDL_AUDIO_F32;
   AudioSettings.channels = 2;
 
   stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &AudioSettings, NULL, NULL);

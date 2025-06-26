@@ -8,11 +8,8 @@
 #include "SDL3/SDL.h"
 
 #include "keyboard.c"
-
 #include "synthesis.c"
-
 #include "config.c"
-
 #include "display.c"
 
 int main(int argc, char *argv[]) {
@@ -20,7 +17,7 @@ int main(int argc, char *argv[]) {
   uint32_t RunningSampleIndex = 1;
 
   int BufferSamples = 512;
-  int16_t SampleOut[4096];
+  float SampleOut[4096];
   void *SoundBuffer = (void *)SampleOut;
 
   setupSDL();
@@ -97,7 +94,7 @@ int main(int argc, char *argv[]) {
 	     SampleIndex < BytesToWrite / BytesPerSample;
 	     ++SampleIndex)
 	  {
-	    int16_t SampleValue = sampleValue(n, RunningSampleIndex + SampleIndex);
+	    float SampleValue = sampleValue(n, RunningSampleIndex + SampleIndex);
 
 	    SampleOut[SampleIndex*2] += SampleValue * (1 - INST.pan);
 	    SampleOut[SampleIndex*2 + 1] += SampleValue * (1 + INST.pan);

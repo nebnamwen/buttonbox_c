@@ -152,7 +152,7 @@ float envelopeValue(float attack, float decay, float sustain, float release, int
 
 #define STATE NOTE.state[i]
 
-int16_t sampleValue(char n, uint32_t index) {
+float sampleValue(char n, uint32_t index) {
   for (int i = 1; i <= INST.max_node; i++) {
     node_t node = INST.node[i];
 
@@ -215,7 +215,7 @@ int16_t sampleValue(char n, uint32_t index) {
       STATE.out = 0;
     }
   }
-  int32_t value = 32700 * INST.volume * NOTE.state[INST.max_node].out;
+  float value = INST.volume * NOTE.state[INST.max_node].out;
   if (value == 0) {
     NOTE.zeros += 1;
   }
