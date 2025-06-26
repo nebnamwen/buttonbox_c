@@ -187,7 +187,7 @@ Wicki-Hayden with four distinct octaves in left and right halves:
 
 Piano-like with about three octaves in top and bottom halves:
 
-    layout=0x12 split=0x10 slant=. inst=1 layout=0x12 transpose=54 color=brown
+    layout=0x12 split=0x10 slant=. inst=1 copy=0 ori=0x24 trans=60 col=brown
 
     *without splitting, this layout gives about an octave and a half of range,
      with the same notes in the bottom two rows repeated in the top two rows
