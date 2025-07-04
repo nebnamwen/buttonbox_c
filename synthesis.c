@@ -105,43 +105,6 @@ float waveformValue(char waveform, float phase, uint32_t index) {
    
 }
 
-float envelopeValue(float attack, float decay, float sustain, float release, int32_t index, int32_t held) {
-  float value = 0.0;
-  float released = 0.0;
-
-  if (index < 0) {
-    return 0.0;
-  }
-
-  int32_t lookup = index;
-  if (held > 0 && index > held) {
-    lookup = held;
-    released = 1.0 * (index - held) / SamplesPerSecond;
-  }
-
-  if (released > release) {
-    return 0.0;
-  }
-
-  float seconds = 1.0 * lookup / SamplesPerSecond;
-  if (seconds < attack) {
-    value = seconds / attack;
-  }
-  else if (seconds < attack + decay) {
-    float lerp = (seconds - attack) / decay;
-    value = (1.0 - lerp) + lerp * sustain;
-  }
-  else {
-    value = sustain;
-  }
-
-  if (released > 0) {
-    value *= 1.0 - released / release;
-  }
-
-  return value;
-}
-
 #define NOTE notes[n]
 
 #define INST instrument[NOTE.instrument]
@@ -175,12 +138,47 @@ float sampleValue(char n, uint32_t index) {
 
     case ENVELOPE:
       {
-	int32_t rel_index = index - NOTE.onset;
-	int32_t held = NOTE.offset - NOTE.onset;
-	STATE.out = envelopeValue(INPUT(0), INPUT(1), INPUT(2), INPUT(3), rel_index, held);
-	if (rel_index == 0 || rel_index == held) {
+	float attack = INPUT(0);
+	float decay = INPUT(1);
+	float sustain = INPUT(2);
+	float release = INPUT(3);
+	float delay = INPUT(4);
+
+	int32_t delay_samples = delay * SamplesPerSecond;
+	
+	int32_t onset = NOTE.onset + delay_samples;
+	int32_t offset = NOTE.offset;
+
+	if (NOTE.onset < NOTE.offset && onset > offset) {
+	  onset = offset;
+	}
+	
+	if (index == onset || index == offset) {
+	  STATE.i = index;
 	  STATE.f = STATE.out;
 	}
+
+	if (index >= onset && onset > offset) {
+	  float seconds = 1.0 * (index - onset) / SamplesPerSecond;
+	  if (seconds < attack) {
+	    float lerp = seconds / attack;
+	    STATE.out = (1.0 - lerp)*STATE.f + lerp;
+	  }
+	  else if (seconds < attack + decay) {
+	    float lerp = (seconds - attack) / decay;
+	    STATE.out = (1.0 - lerp) + lerp * sustain;
+	  }
+	  else {
+	    STATE.out = sustain;
+	  }
+	}
+	else {
+	  float released = 1.0 * (index - offset) / SamplesPerSecond;
+	  float lerp = 1.0 - released / release;
+	  if (lerp < 0) { lerp = 0; }
+	  STATE.out = lerp * STATE.f;
+	}
+
 	break;
       }
 

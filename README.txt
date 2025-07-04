@@ -265,7 +265,7 @@ according to the instrument's pan setting.
 
 -- envelopes --
 
-A=env:attack,decay,sustain,release
+A=env:attack,decay,sustain,release,delay
 
 An envelope is a function that describes the way that a note gets louder and
 softer over time, from the moment the note is struck to when it fades out.
@@ -273,7 +273,7 @@ By combining nodes, it can also be used to control other effects that change
 intensity over time.
 
 The most common envelope generator used in music synthesis has four parameters:
-attack, decay, sustain, and release*.
+attack, decay, sustain, and release*.  Sometimes a delay is also included.
 
 *https://en.wikipedia.org/wiki/Envelope_(music)
 
@@ -300,6 +300,14 @@ release -- the time interval (in seconds) it takes for the envelope
            *setting release to 0 can result in a click when a note is released
 	    so it's recommended to use a small but positive value even when
             you want notes to stop "immediately"
+
+delay -- the time interval (in seconds) after a key is pressed before the
+         envelope attack begins (the release of the key is not delayed)
+         value: a decimal number >= 0
+         default: 0
+
+         *chronologically in the progress of the envelope this should be first
+          but it's placed last since it will be the most frequently omitted
 
 -- waveforms --
 
