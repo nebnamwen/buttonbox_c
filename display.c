@@ -144,7 +144,7 @@ void drawKeyIcon(char grid, char onoff) {
 
 void initDisplay() {
   for (int keysym = 0; keysym < 128; keysym++) {
-    if (keygrid[keysym] != -1) {
+    if (keygrid[keysym] >= 0) {
       drawKeyIcon(keygrid[keysym], 0);
     }
   }

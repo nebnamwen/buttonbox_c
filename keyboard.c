@@ -22,7 +22,7 @@ keyboard_t default_keyboard = { 0, 0x09, '/', COL_GRAY, 0x00, 36, 0x72 };
 #define NUM_INSTS 8
 keyboard_t keyboard[NUM_INSTS];
 
-signed char keygrid[128];
+signed char keygrid[256];
 
 void initKeygrid() {
 
@@ -32,10 +32,14 @@ void initKeygrid() {
 
   keyboard[0].is_active = 1;
   
-  for (int i = 0; i < 128; i++) {
+  for (int i = 0; i < 256; i++) {
     keygrid[i] = -1;
   }
 
+  keygrid[SDL_SCANCODE_LSHIFT] = -2;
+  keygrid[SDL_SCANCODE_RSHIFT] = -2;
+  keygrid[SDL_SCANCODE_SPACE] = -2;
+  
   keygrid[SDL_SCANCODE_Z] = 0x00;
   keygrid[SDL_SCANCODE_X] = 0x01;
   keygrid[SDL_SCANCODE_C] = 0x02;

@@ -40,7 +40,7 @@ typedef struct {
   uint32_t zeros;
 } note_t;
 
-note_t notes[128];
+note_t notes[256];
 
 #define NO_NODE 0
 
@@ -51,12 +51,15 @@ note_t notes[128];
 #define NOISE 5
 
 #define ENVELOPE 10
+#define ENV_LSHIFT 11
+#define ENV_RSHIFT 12
+#define ENV_SPACE 13
 
-#define MIX 11
-#define EXP 12
+#define MIX 16
+#define EXP 17
 
-#define LOWPASS 13
-#define HIGHPASS 14
+#define LOWPASS 18
+#define HIGHPASS 19
 
 #define NOISE_RES 32768
 
@@ -106,6 +109,7 @@ float waveformValue(char waveform, float phase, uint32_t index) {
 }
 
 #define NOTE notes[n]
+#define KEY notes[key]
 
 #define INST instrument[NOTE.instrument]
 
@@ -137,6 +141,9 @@ float sampleValue(char n, uint32_t index) {
       }
 
     case ENVELOPE:
+    case ENV_LSHIFT:
+    case ENV_RSHIFT:
+    case ENV_SPACE:
       {
 	float attack = INPUT(0);
 	float decay = INPUT(1);
@@ -145,11 +152,30 @@ float sampleValue(char n, uint32_t index) {
 	float delay = INPUT(4);
 
 	int32_t delay_samples = delay * SamplesPerSecond;
-	
-	int32_t onset = NOTE.onset + delay_samples;
-	int32_t offset = NOTE.offset;
 
-	if (NOTE.onset < NOTE.offset && onset > offset) {
+	unsigned char key;
+	switch(node.type) {
+	case ENVELOPE:
+	  key = n;
+	  break;
+	  
+	case ENV_LSHIFT:
+	  key = SDL_SCANCODE_LSHIFT;
+	  break;
+	  
+	case ENV_RSHIFT:
+	  key = SDL_SCANCODE_RSHIFT;
+	  break;
+	  
+	case ENV_SPACE:
+	  key = SDL_SCANCODE_SPACE;
+	  break;
+	}
+	
+	int32_t onset = KEY.onset + delay_samples;
+	int32_t offset = KEY.offset;
+
+	if (KEY.onset < KEY.offset && onset > offset) {
 	  onset = offset;
 	}
 	
@@ -255,7 +281,7 @@ void initNotes() {
     }
   }
 
-  for (int n = 0; n < 128; n++) {
+  for (int n = 0; n < 256; n++) {
     clearNote(n);
   }
 }

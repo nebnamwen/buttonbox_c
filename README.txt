@@ -309,6 +309,16 @@ delay -- the time interval (in seconds) after a key is pressed before the
          *chronologically in the progress of the envelope this should be first
           but it's placed last since it will be the most frequently omitted
 
+Types: env | els | ers | esp
+
+  - env (envelope): an envelope controlled by the onset and offset of a note key
+  - els (envelope, left shift): controlled by the onset and offset of the left shift key*
+  - env (envelope, right shift): controlled by the onset and offset of the right shift key*
+  - env (envelope, space bar): controlled by the onset and offset of the space bar*
+
+  *The left and right shift keys and space bar cannot be assigned notes, but can be used
+   to modify the sound produced by an instrument when a regular note key is pressed.
+
 -- waveforms --
 
 B=sine:amplitude,pitch

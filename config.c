@@ -159,16 +159,19 @@ void doConfigClause(char* clause, const char* file) {
     value = nexttok(value, ":");
 
     int expected_inputs = 0;
+
+#define ENV_DEFAULT(t) NODE.type = t; \
+    expected_inputs = 5;	      \
+    INPUT(0).val = 0.05;	      \
+    INPUT(1).val = 0.05;	      \
+    INPUT(2).val = 1.0;		      \
+    INPUT(3).val = 0.1;		      \
+    INPUT(4).val = 0.0;
     
-    if (strncmp(node_key, "env", 3) == 0) {
-      NODE.type = ENVELOPE;
-      expected_inputs = 5;
-      INPUT(0).val = 0.05;
-      INPUT(1).val = 0.05;
-      INPUT(2).val = 1.0;
-      INPUT(3).val = 0.1;
-      INPUT(4).val = 0.0;
-    }
+    if (strncmp(node_key, "env", 3) == 0) { ENV_DEFAULT(ENVELOPE) }
+    else if (strncmp(node_key, "els", 3) == 0) { ENV_DEFAULT(ENV_LSHIFT) }
+    else if (strncmp(node_key, "ers", 3) == 0) { ENV_DEFAULT(ENV_RSHIFT) }
+    else if (strncmp(node_key, "esp", 3) == 0) { ENV_DEFAULT(ENV_SPACE) }
 
 #define WF_DEFAULT(t,d) NODE.type = t; expected_inputs = 2; INPUT(0).val = d; INPUT(1).addr = PITCH_IN;
 

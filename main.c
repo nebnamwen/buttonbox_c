@@ -55,22 +55,26 @@ int main(int argc, char *argv[]) {
 
 	else if (e.key.repeat == 0) {
 	  keycode = e.key.scancode;
-	  if (keycode > 0 && keycode < 128 && keygrid[keycode] != -1) {
-	    notes[keycode].instrument = keyboardForGrid(keygrid[keycode]);
-	    notes[keycode].frequency = frequencyForNote(noteForGrid(keygrid[keycode]));
+	  if (keycode > 0 && keycode < 256 && keygrid[keycode] != -1) {
+	    // printf("%d\n",keycode);
 	    notes[keycode].onset = RunningSampleIndex;
-	    notes[keycode].offset = 0;
+	    if (keygrid[keycode] >= 0) {
+	      notes[keycode].instrument = keyboardForGrid(keygrid[keycode]);
+	      notes[keycode].frequency = frequencyForNote(noteForGrid(keygrid[keycode]));
 
-	    drawKeyIcon(keygrid[keycode], 1);
+	      drawKeyIcon(keygrid[keycode], 1);
+	    }
 	  }
 	}
 	break;
 
       case SDL_EVENT_KEY_UP:
 	keycode = e.key.scancode;
-	if (keycode > 0 && keycode < 128 && keygrid[keycode] != -1) {
+	if (keycode > 0 && keycode < 256 && keygrid[keycode] != -1) {
 	  notes[keycode].offset = RunningSampleIndex;
-	  drawKeyIcon(keygrid[keycode], 0);
+	  if (keygrid[keycode] >= 0) {
+	    drawKeyIcon(keygrid[keycode], 0);
+	  }
 	}
 	break;
 	
@@ -88,8 +92,8 @@ int main(int argc, char *argv[]) {
       SampleOut[SampleIndex*2 + 1] = 0;
     }
 
-    for (int n = 0; n < 128; n++) {
-      if (NOTE.onset) {
+    for (int n = 0; n < 64; n++) {
+      if (keygrid[n] >= 0 && NOTE.onset) {
 	for (int SampleIndex = 0;
 	     SampleIndex < BytesToWrite / BytesPerSample;
 	     ++SampleIndex)
@@ -104,8 +108,8 @@ int main(int argc, char *argv[]) {
 
     RunningSampleIndex += BytesToWrite / BytesPerSample;
 
-    for (int n = 0; n < 128; n++) {
-      if (isNoteFinished(n, RunningSampleIndex)) {
+    for (int n = 0; n < 64; n++) {
+      if (keygrid[n] >= 0 && isNoteFinished(n, RunningSampleIndex)) {
 	clearNote(n);
       }
     }
