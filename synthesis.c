@@ -253,7 +253,9 @@ float sampleValue(char n, uint32_t index) {
 #define NOTE_OFF_THRESHOLD 0.25 * SamplesPerSecond
 
 char isNoteFinished(char n, uint32_t index) {
-  return index - NOTE.onset > NOTE_OFF_THRESHOLD && NOTE.zeros > NOTE_OFF_THRESHOLD;
+  return NOTE.offset > NOTE.onset &&
+    index - NOTE.onset > NOTE_OFF_THRESHOLD &&
+    NOTE.zeros > NOTE_OFF_THRESHOLD;
 }
 
 void clearNote(int n) {
