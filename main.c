@@ -23,6 +23,7 @@ int main(int argc, char *argv[]) {
   setupSDL();
 
   initKeygrid();
+  initInstruments();
   initNotes();
 
   // apply config from command line
@@ -51,6 +52,24 @@ int main(int argc, char *argv[]) {
       case SDL_EVENT_KEY_DOWN:
 	if (e.key.key == SDLK_ESCAPE) {
 	  quit = 1;
+	}
+
+	else if (e.key.key == SDLK_TAB) {
+	  char cont;
+	  char buffer[256];
+	  do {
+	    if (fgets(buffer, sizeof(buffer), stdin) != NULL) {
+	      cont = doConfigLine(buffer, "");
+	      initNotes();
+	      initDisplay();
+	    } else if (feof(stdin)) {
+	      printf("End of file: No more config to read!\n");
+	      cont = 0;
+	    } else if (ferror(stdin)) {
+	      printf("Error reading from STDIN!\n");
+	      cont = 0;
+	    }
+	  } while (cont);
 	}
 
 	else if (e.key.repeat == 0) {

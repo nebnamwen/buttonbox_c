@@ -258,31 +258,37 @@ char isNoteFinished(char n, uint32_t index) {
     NOTE.zeros > NOTE_OFF_THRESHOLD;
 }
 
-void clearNote(int n) {
-    NOTE.onset = 0;
-    NOTE.offset = 0;
-    NOTE.zeros = 0;
-    for (int i = 0; i <= NUM_NODES; i++) {
-      STATE.i = 0;
-      STATE.f = 0;
-      STATE.out = 0;
+void clearInstrument(int i) {
+  instrument[i].volume = 0.2;
+  instrument[i].pan = 0;
+  instrument[i].max_node = 0;
+  for (int j = 0; j <= NUM_NODES; j++) {
+    instrument[i].node[j].type = NO_NODE;
+    for (int k = 0; k < NUM_INPUTS; k++) {
+      instrument[i].node[j].input[k].addr = CONST_IN;
+      instrument[i].node[j].input[k].val = 0;
     }
+  }
+}
+
+void initInstruments() {
+  for (int i = 0; i < NUM_INSTS; i++) {
+    clearInstrument(i);
+  }
+}
+
+void clearNote(int n) {
+  NOTE.onset = 0;
+  NOTE.offset = 0;
+  NOTE.zeros = 0;
+  for (int i = 0; i <= NUM_NODES; i++) {
+    STATE.i = 0;
+    STATE.f = 0;
+    STATE.out = 0;
+  }
 }
 
 void initNotes() {
-  for (int i = 0; i < NUM_INSTS; i++) {
-    instrument[i].volume = 0.2;
-    instrument[i].pan = 0;
-    instrument[i].max_node = 0;
-    for (int j = 0; j <= NUM_NODES; j++) {
-      instrument[i].node[j].type = NO_NODE;
-      for (int k = 0; k < NUM_INPUTS; k++) {
-	instrument[i].node[j].input[k].addr = CONST_IN;
-	instrument[i].node[j].input[k].val = 0;	
-      }
-    }
-  }
-
   for (int n = 0; n < 256; n++) {
     clearNote(n);
   }

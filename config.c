@@ -252,14 +252,28 @@ void doConfigClause(char* clause, const char* file) {
   }
 }
 
-void doConfigLine(char* line, const char* file) {
-  if (strchr("#\n", line[0]) != NULL) { return; }
+char doConfigLine(char* line, const char* file) {
+  if (line[0] == '>') {
+    line++;
+    printf("%s", line);
+  }
 
+  if (line[0] == '\n') { return 0; }
+  if (line[0] == '#') { return strlen(line) > 1 && line[strlen(line)-2] == '\\'; }
+
+  char cont = 0;
   do {
     char* current = line;
     do { line = nexttok(line, " \t\n"); } while (line != NULL && strchr(" \t\n", line[0]) != NULL);
-    doConfigClause(current, file);
+    if (strcmp(current, "\\") == 0) {
+      cont = 1;
+    } else {
+      if (strlen(current)) { doConfigClause(current, file); }
+      cont = 0;
+    }
   } while (line != NULL);
+
+  return cont;
 }
 
 void doConfigFile(const char* file) {
