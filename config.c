@@ -227,13 +227,11 @@ void doConfigClause(char* clause, const char* file, int linenum, int word) {
     }
 
     if (value != NULL) {
-      if (strlen(file)) { printf("(%s): ", file); }
       TRACE; printf("Too many inputs for %s node: %s\n", node_key, value);
     }
   }
 
   else {
-    if (strlen(file)) { printf("(%s): ", file); }
     TRACE; printf("Unknown config key: %s\n", key);
   }
 }
