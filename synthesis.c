@@ -29,7 +29,7 @@ typedef struct {
   char max_node;
 } instrument_t;
 
-instrument_t instrument[NUM_INSTS];
+instrument_t instrument[NUM_INSTS + 1];
 
 typedef struct {
   char instrument;
@@ -272,7 +272,7 @@ void clearInstrument(int i) {
 }
 
 void initInstruments() {
-  for (int i = 0; i < NUM_INSTS; i++) {
+  for (int i = 0; i <= NUM_INSTS; i++) {
     clearInstrument(i);
   }
 }

@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
     char *arg = argv[i];
     char *pos = strchr(arg, '=');
     if (pos == NULL) { doConfigFile(arg); }
-    else { doConfigLine(arg, ""); }
+    else { doConfigLine(arg, "ARGV", 0); }
   }
 
   setDefaultInstrumentIfZero();
@@ -40,6 +40,7 @@ int main(int argc, char *argv[]) {
 
   int quit = 0;
   int keycode = 0;
+  int stdinline = 0;
   SDL_Event e;
 
   while (! quit) {
@@ -59,17 +60,20 @@ int main(int argc, char *argv[]) {
 	  char buffer[256];
 	  do {
 	    if (fgets(buffer, sizeof(buffer), stdin) != NULL) {
-	      cont = doConfigLine(buffer, "");
+	      stdinline++;
+	      cont = doConfigLine(buffer, "STDIN", stdinline);
 	      initNotes();
 	      initDisplay();
 	    } else if (feof(stdin)) {
-	      printf("End of file: No more config to read!\n");
+	      printf("STDIN line %d: End of file: No more config to read!\n", stdinline);
 	      cont = 0;
 	    } else if (ferror(stdin)) {
-	      printf("Error reading from STDIN!\n");
+	      printf("STDIN line %d: Error reading from STDIN!\n", stdinline);
 	      cont = 0;
 	    }
 	  } while (cont);
+
+	  setDefaultInstrumentIfZero();
 	}
 
 	else if (e.key.repeat == 0) {

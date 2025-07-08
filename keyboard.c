@@ -20,17 +20,17 @@ typedef struct {
 keyboard_t default_keyboard = { 0, 0x09, '/', COL_GRAY, 0x00, 36, 0x72 };
 
 #define NUM_INSTS 8
-keyboard_t keyboard[NUM_INSTS];
+keyboard_t keyboard[NUM_INSTS + 1];
 
 signed char keygrid[256];
 
 void initKeygrid() {
 
-  for (int i = 0; i < NUM_INSTS; i++) {
+  for (int i = 0; i <= NUM_INSTS; i++) {
     keyboard[i] = default_keyboard;
   }
 
-  keyboard[0].is_active = 1;
+  keyboard[1].is_active = 1;
   
   for (int i = 0; i < 256; i++) {
     keygrid[i] = -1;
@@ -91,7 +91,7 @@ void initKeygrid() {
 }
 
 int keyboardForGrid(char grid) {
-  for (int i = 0; i < NUM_INSTS; i++) {
+  for (int i = 1; i < NUM_INSTS; i++) {
     int du, dv;
 
     switch (keyboard[i].slant) {
@@ -142,7 +142,7 @@ int keyboardForGrid(char grid) {
     }
   }
 
-  return NUM_INSTS - 1;
+  return NUM_INSTS;
 }
 
 int noteForGrid(char grid) {
