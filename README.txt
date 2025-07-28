@@ -3,7 +3,7 @@ and modular software-defined intruments.
 
 ButtonBox is implemented in C by Benjamin Newman and is free to use and modify.
 Source code can be found at https://github.com/nebnamwen/buttonbox_c
-The only build dependencies are the C standard library and SDL2 (https://www.libsdl.org)
+The only build dependencies are the C standard library and SDL3 (https://www.libsdl.org)
 
 A proof-of-concept in Java with slightly different features is also available
 at https://github.com/nebnamwen/buttonbox -- it uses Midi instruments, so it can
@@ -60,7 +60,15 @@ ghost on the keyboard you have.
 == configuring ButtonBox ==
 
 ButtonBox accepts configuration in the form of key=value clauses,
-which can be provided directly on the command line or in files.
+which can be provided at startup on the command line or in files.
+
+Config can also be read from standard input while the application runs.
+Press the TAB key to read a line of config from standard input.
+The application will block (pausing sound) until a line is available.
+End a line with a backslash \ to read another line immediately with
+a single press of TAB; config will be read until a line not ending in \
+is encountered.  The \ must a separate token delimited by whitespace.
+
 Clauses are separated by whitespace.  Blank lines or lines beginning
 with a # are ignored.
 
@@ -148,7 +156,7 @@ assigned different layouts and colors (see above) and sounds (see below).
 instrument -- select the keyboard section and instrument to which
               subsequent config clauses will be applied
 
-              value: an integer between 0 and 7
+              value: an integer between 1 and 8
 
 split -- the key at which to split this keyboard section from the next
 
@@ -208,7 +216,9 @@ the soundtrack from the original TRON film, which is available digitally.)
 
 copy -- copy another instrument's synthesizer config and keyboard layout
         (useful when setting up multiple keyboards to play the same instrument)
-	value: the other config to copy from (an integer between 0 and 7)
+	value: the other config to copy from (an integer between 0 and 8)
+        *instrument 0 is reserved and will always be the null instrument;
+         copy=0 can therefore be used to clear the current instrument
 
 volume -- the main volume control for the current instrument
           value: a decimal number between 0 and 1.0
@@ -262,6 +272,13 @@ Each type of node is explained in more detail below.
 The output of the instrument is the value of the (alphabetically) last node,
 multiplied by the instrument's volume setting, and placed in stereo space
 according to the instrument's pan setting.
+
+The "set" keyword is not a node type but can be used to change one or more
+of the inputs to a node without changing the other inputs or the node type.
+This can be used when reading config from standard input to make adjustments.
+
+Example:
+    A=env A=set:,,,0.5 -- change the envelope's release parameter (see below)
 
 -- envelopes --
 
@@ -398,8 +415,8 @@ sine wave plus a percussive crunch onset:
 
 sine into sawtooth (sounds a bit brassy):
 
-    A=env:0,0.8,0.5,0.1  B=sin:A C=env:0.8/0/1/0.1 D=saw:C E=mix:B,,D
+    A=env:0,0.8,0.5,0.1 B=sin:A C=env:0.8/0/1/0.1 D=saw:C E=mix:B,,D
 
 triangle and sine with a fast decay (sounds a bit like a plucked string):
 
-    A=env:0.005,0.1,0.1,0.1  B=tri:A C=env:0,0.3,0.2,0.1 D=sin:C E=mix:B,,D
+    A=env:0.005,0.1,0.1,0.1 B=tri:A C=env:0,0.3,0.2,0.1 D=sin:C E=mix:B,,D
