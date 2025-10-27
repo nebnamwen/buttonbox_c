@@ -1,5 +1,7 @@
 int SamplesPerSecond = 44100;
 
+#define NUM_INSTS 8
+
 #define NUM_INPUTS 5
 #define NUM_NODES 26
 
@@ -32,7 +34,7 @@ typedef struct {
 instrument_t instrument[NUM_INSTS + 1];
 
 typedef struct {
-  char instrument;
+  instrument_t instrument;
   float frequency;
   uint32_t onset;
   uint32_t offset;
@@ -111,7 +113,7 @@ float waveformValue(char waveform, float phase, uint32_t index) {
 #define NOTE notes[n]
 #define KEY notes[key]
 
-#define INST instrument[NOTE.instrument]
+#define INST NOTE.instrument
 
 #define INPUT(j) (node.input[j].addr == CONST_IN ? node.input[j].val : \
 		  node.input[j].addr == PITCH_IN ? NOTE.frequency :    \

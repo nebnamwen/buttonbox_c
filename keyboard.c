@@ -1,5 +1,5 @@
 typedef struct {
-  char is_active;
+  char instrument;
   char split;
   char slant;
   char color;
@@ -17,20 +17,22 @@ typedef struct {
 #define COL_CYAN 6
 #define COL_BROWN 7
 
-keyboard_t default_keyboard = { 0, 0x09, '/', COL_GRAY, 0x00, 36, 0x72 };
+keyboard_t default_base_keyboard = { 1, 0x09, '/', COL_GRAY, 0x00, 36, 0x72 };
+// instrument 0 and layout 0 mean "same as previous keyboard"
+keyboard_t default_keyboard = { 0, 0x09, '/', COL_GRAY, 0x00, 36, 0 };
 
-#define NUM_INSTS 8
-keyboard_t keyboard[NUM_INSTS + 1];
+#define NUM_KEYBDS 8
+keyboard_t keyboard[NUM_KEYBDS + 1];
 
 signed char keygrid[256];
 
 void initKeygrid() {
 
-  for (int i = 0; i <= NUM_INSTS; i++) {
+  for (int i = 0; i <= NUM_KEYBDS; i++) {
     keyboard[i] = default_keyboard;
   }
 
-  keyboard[1].is_active = 1;
+  keyboard[1] = default_base_keyboard;
   
   for (int i = 0; i < 256; i++) {
     keygrid[i] = -1;
@@ -91,7 +93,7 @@ void initKeygrid() {
 }
 
 int keyboardForGrid(char grid) {
-  for (int i = 1; i < NUM_INSTS; i++) {
+  for (int i = 1; i < NUM_KEYBDS; i++) {
     int du, dv;
 
     switch (keyboard[i].slant) {
@@ -142,15 +144,32 @@ int keyboardForGrid(char grid) {
     }
   }
 
-  return NUM_INSTS;
+  return NUM_KEYBDS;
+}
+
+unsigned char layoutForKeyboard(char kb) {
+  if (keyboard[kb].layout == 0 && kb > 1) {
+    return layoutForKeyboard(kb - 1);
+  } else {
+    return keyboard[kb].layout;
+  }
 }
 
 int noteForGrid(char grid) {
   int kb = keyboardForGrid(grid);
   int row = grid / 16 - keyboard[kb].origin / 16;
   int col = grid % 16 - keyboard[kb].origin % 16;
-  int note = row * (keyboard[kb].layout / 16) + (col - row) * (keyboard[kb].layout % 16) + keyboard[kb].transpose;
+  unsigned char layout = layoutForKeyboard(kb);
+  int note = row * (layout / 16) + (col - row) * (layout % 16) + keyboard[kb].transpose;
   return note;
+}
+
+char instForKeyboard(char kb) {
+  if (keyboard[kb].instrument == 0 && kb > 1) {
+    return instForKeyboard(kb - 1);
+  } else {
+    return keyboard[kb].instrument;
+  }
 }
 
 float frequencyForNote(int note_number) {

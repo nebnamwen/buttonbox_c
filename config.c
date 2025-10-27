@@ -20,9 +20,10 @@ char* nexttok(char* start, const char* split) {
 #undef INPUT
 
 int current_inst = 1;
+int current_keybd = 1;
 
-#define KEYB keyboard[current_inst]
 #define INST instrument[current_inst]
+#define KEYB keyboard[current_keybd]
 #define NODE INST.node[node_index]
 #define INPUT(j) NODE.input[j]
 
@@ -39,7 +40,29 @@ void doConfigClause(char* clause, const char* file, int linenum, int word) {
       TRACE; printf("Invalid value for instrument number: %s (Should be between 1 and %d)\n", value, NUM_INSTS);
     } else {
       current_inst = val;
-      KEYB.is_active = 1;
+    }
+  }
+
+  // select keyboard (1 <= int <= NUM_KEYBDS) and set instrument (0 <= int <= NUM_INSTS)
+  // instrument 0 means "same as previous keyboard"
+  else if (strncmp(key, "key", 3) == 0) {
+    int val;
+    char* val2 = nexttok(value, ":");
+    if (strlen(value)) {
+      val = atoi(value);
+      if (val < 1 || val > NUM_KEYBDS) {
+	TRACE; printf("Invalid value for keyboard number: %s (Should be between 1 and %d)\n", value, NUM_KEYBDS);
+      } else {
+	current_keybd = val;
+      }
+    }
+    if (val2 != NULL && strlen(val2)) {
+      val = atoi(val2);
+      if (val < 0 || val > NUM_INSTS) {
+	TRACE; printf("Invalid value for instrument number: %s (Should be between 0 and %d)\n", value, NUM_INSTS);
+      } else {
+	KEYB.instrument = val;
+      }
     }
   }
 
@@ -50,7 +73,6 @@ void doConfigClause(char* clause, const char* file, int linenum, int word) {
       TRACE; printf("Invalid value for source instrument number: %s (Should be between 0 and %d)\n", value, NUM_INSTS);
     } else {
       INST = instrument[val];
-      KEYB.layout = keyboard[val].layout;
     }
   }
   
@@ -98,12 +120,6 @@ void doConfigClause(char* clause, const char* file, int linenum, int word) {
     KEYB.transpose = val;
   }
 
-  // set origin (grid)
-  else if (strncmp(key, "ori", 3) == 0) {
-    char val = (char)strtol(value, NULL, 0);
-    KEYB.origin = val;
-  }  
-
   // set layout (grid)
   else if (strncmp(key, "lay", 3) == 0) {
     char val = (char)strtol(value, NULL, 0);
@@ -145,7 +161,7 @@ void doConfigClause(char* clause, const char* file, int linenum, int word) {
       TRACE; printf("Node %s of instrument %d not defined\n", key, current_inst);
     }
 
-    if (!is_set && node_index > instrument[current_inst].max_node) {
+    if (!is_set && node_index > INST.max_node) {
       INST.max_node = node_index;
     }
 
@@ -284,9 +300,13 @@ void doConfigFile(const char* file) {
 
 void setDefaultInstrumentIfZero() {
   char buffer[] = "inst=N A=env B=sin:A\n";
-  for (int i = 1; i <= NUM_INSTS; i++) {
-    if (keyboard[i].is_active && instrument[i].max_node == 0) {
-      sprintf(buffer, "inst=%d A=env B=sin:A\n", i);
+  if (keyboard[1].instrument == 0) {
+    keyboard[1].instrument = 1;
+  }
+
+  for (int i = 1; i <= NUM_KEYBDS; i++) {
+    if (keyboard[i].instrument != 0 && instrument[keyboard[i].instrument].max_node == 0) {
+      sprintf(buffer, "inst=%d A=env B=sin:A\n", keyboard[i].instrument);
       doConfigLine(buffer, "INTERNAL", i);
     }
   }

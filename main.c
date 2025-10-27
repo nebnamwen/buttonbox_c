@@ -82,7 +82,8 @@ int main(int argc, char *argv[]) {
 	    // printf("%d\n",keycode);
 	    notes[keycode].onset = RunningSampleIndex;
 	    if (keygrid[keycode] >= 0) {
-	      notes[keycode].instrument = keyboardForGrid(keygrid[keycode]);
+	      
+	      notes[keycode].instrument = instrument[instForKeyboard(keyboardForGrid(keygrid[keycode]))];
 	      notes[keycode].frequency = frequencyForNote(noteForGrid(keygrid[keycode]));
 
 	      drawKeyIcon(keygrid[keycode], 1);
