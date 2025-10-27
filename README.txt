@@ -126,6 +126,9 @@ layout -- determines how notes are arranged on the keyboard
                layouts to work since both values must be positive
                (a way to specify negative intervals may be added later)
 
+              (when defining multiple keyboards, a layout value of 0x00
+               means to use the same layout as the previous keyboard section)
+
        examples:
           0x12 -- as close as we can get to a piano keyboard, and also
                   similar to the arrangement of frets on a harpejji
@@ -153,10 +156,14 @@ layout -- determines how notes are arranged on the keyboard
 The keyboard can be divided into multiple sections (up to 8), which can be
 assigned different layouts and colors (see above) and sounds (see below).
 
-instrument -- select the keyboard section and instrument to which
-              subsequent config clauses will be applied
+keyboard -- select the keyboard section to which subsequent config clauses
+              will be applied, along with (optionally) the instrument id
+              to assign to this keyboard
 
               value: an integer between 1 and 8
+                (optionally, a ':' and another integer between 0 and 8)
+                (an instrument id of 0 means to use the same instrument
+                 as the previous keyboard section)
 
 split -- the key at which to split this keyboard section from the next
 
@@ -188,21 +195,21 @@ slant -- a character representing the angle of the line dividing this
 
 Wicki-Hayden with four distinct octaves in left and right halves:
 
-    inst=0 split=0x04 slant='|' inst=1 origin=0x06 transpose=60 color=brown
+    keyb=1 split=0x04 slant='|' keyb=2 origin=0x06 transpose=60 color=brown
 
     *Wicki-Hayden is the default layout, but when used as a single keyboard
      the upper octave on the left is the same as the lower octave on the right
 
 Piano-like with about three octaves in top and bottom halves:
 
-    layout=0x12 split=0x10 slant=. inst=1 copy=0 ori=0x24 trans=60 col=brown
+    keyb=1 layout=0x12 split=0x10 slant=. keyb=2 ori=0x24 trans=60 col=brown
 
     *without splitting, this layout gives about an octave and a half of range,
      with the same notes in the bottom two rows repeated in the top two rows
 
 == configuring instruments ==
 
-Each instrument (keyboard section) can be assigned a different sound.
+Each instrument can be assigned a different sound.
 
 For inspiring the design choices behind ButtonBox's synthesis configuration,
 I'm indebted to this video (https://www.youtube.com/watch?v=4SBDH5uhs4Q) of
@@ -214,8 +221,7 @@ the soundtrack from the original TRON film, which is available digitally.)
 
 -- instrument controls --
 
-copy -- copy another instrument's synthesizer config and keyboard layout
-        (useful when setting up multiple keyboards to play the same instrument)
+copy -- copy another instrument's synthesizer config
 	value: the other config to copy from (an integer between 0 and 8)
         *instrument 0 is reserved and will always be the null instrument;
          copy=0 can therefore be used to clear the current instrument
