@@ -202,9 +202,13 @@ float sampleValue(char n, uint32_t index) {
 	}
 	else {
 	  float released = 1.0 * (index - offset) / SamplesPerSecond;
-	  float lerp = 1.0 - released / release;
-	  if (lerp < 0) { lerp = 0; }
-	  STATE.out = lerp * STATE.f;
+	  if (released < release) {
+	    float lerp = 1.0 - released / release;
+	    STATE.out = lerp * STATE.f;
+	  }
+	  else {
+	    STATE.out = 0;
+	  }
 	}
 
 	break;
