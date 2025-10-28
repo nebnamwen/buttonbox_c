@@ -13,7 +13,7 @@ to be usable as a performing instrument.  This C version is much more responsive
 == building ButtonBox ==
 
 I'm more experienced with writing code than I am with setting up build environments.
-Consult the documentation for your C compiler and the SDL2 library if necessary.
+Consult the documentation for your C compiler and the SDL3 library if necessary.
 
 The ButtonBox project comes with a Makefile for use with the `make` build tool
 common on Unix-ish systems.  If your system has `make`, you should be able to build
@@ -85,24 +85,31 @@ color -- determines the color of the keys in the graphical display
 
          values: gray | red | green | yellow | blue | magenta | cyan | brown
 
-origin, transpose -- together determine where on the keyboard
-                     and on what note the scale starts
+transpose -- where on the keyboard and on what note the scale starts
 
-        origin -- the key to start counting from, as a hex pair
-                  e.g. 'z' is '0x00' (row 0 from the bottom, key 0 in that row)
-                       'd' is '0x12' (row 1 from the bottom, key 2 in that row)
-                  *both coordinates are 0-based
-                  *the leading '0x' is required
+        values: origin:note
 
-        transpose -- the MIDI note number to assign to the origin key
-                     *MIDI note numbers are integers between 0 and 127
-                     *middle C is 60 and concert A (440Hz) is 69
-                     *the notes of a piano keyboard run from 21 to 108
+        origin -- the keyboard key to start counting from, as a char* or a hex pair**
+                  * the character typed by this key without any modifier keys
+                    e.g. any of the lowercase letters or digits, and some punctuation
+                    - this assumes a QWERTY keyboard layout
 
-        for example, to set 'g' to be middle C: origin=0x14 transpose=60
+                  ** a 2-digit hexadecimal number whose digits are the row and column
+                     e.g. 'z' is '0x00' (row 0 from the bottom, key 0 in that row)
+                          'd' is '0x12' (row 1 from the bottom, key 2 in that row)
+                     - both coordinates are 0-based
+                     - the leading '0x' is required
 
-        origin also determines which keys will be displayed with a dot
-        indicating the root of the scale
+        note -- the note to count from, either by name* or as a MIDI note number**
+                * a note letter, an optional sharp (#) or flat (b), and an octave number
+                  e.g. C4 (middle C), A4 (concert A), Bb6, F#2, etc.
+                ** MIDI note numbers are integers between 0 and 127
+                   - middle C is 60 and concert A (440Hz) is 69
+                   - the notes of a piano keyboard run from 21 to 108
+
+        for example, to set 'g' to be middle C: transpose=g:C4 or transpose=0x14:60
+
+        the transpose origin also determines which keys will be displayed with a dot
 
         twelve even-tempered notes per octave is the only supported scale
 
@@ -166,43 +173,44 @@ keyboard -- select the keyboard section to which subsequent config clauses
                  as the previous keyboard section)
 
 split -- the key at which to split this keyboard section from the next
+         and the angle of the line dividing this keyboard section from the next
 
-         value: key coordinates as a hex pair (see "origin", above)
+         value: key:slant
 
-slant -- a character representing the angle of the line dividing this
-         keyboard section from the next
+         key -- a keyboard key specified as a key char or hex pair
+                (see transpose > origin above)
 
-         value: one of / | \ ` ' , .
+         slant -- one of / | \ ` ' , .
 
-         / -- split along a rightward-slanting line, e.g. z-s-e-4
+                  / -- split along a rightward-slanting line, e.g. z-s-e-4
 
-         | -- split along a vertical zig-zag, e.g. z-a-w-2
+                  | -- split along a vertical zig-zag, e.g. z-a-w-2
 
-         \ -- split along a leftward-slanting line, e.g. z-a-q-1
+                  \ -- split along a leftward-slanting line, e.g. z-a-q-1
 
-         ` -- split from this key to the left, and all rows above
+                  ` -- split from this key to the left, and all rows above
 
-         ' -- split from this key to the right, and all rows above
+                  ' -- split from this key to the right, and all rows above
 
-         , -- split from this key to the left, and all rows below
+                  , -- split from this key to the left, and all rows below
 
-         . -- split from this key to the right, and all rows below
+                  . -- split from this key to the right, and all rows below
 
-         *some slant options must be escaped on the command line
-	  to avoid being interpreted as metacharacters by the shell
+                  *some slant options must be escaped on the command line
+	           to avoid being interpreted as metacharacters by the shell
 
 -- examples of multiple keyboards --
 
 Wicki-Hayden with four distinct octaves in left and right halves:
 
-    keyb=1 split=0x04 slant='|' keyb=2 origin=0x06 transpose=60 color=brown
+    keyb=1 split=0x04:\| keyb=2 transpose=0x06:60 color=brown
 
     *Wicki-Hayden is the default layout, but when used as a single keyboard
      the upper octave on the left is the same as the lower octave on the right
 
 Piano-like with about three octaves in top and bottom halves:
 
-    keyb=1 layout=0x12 split=0x10 slant=. keyb=2 ori=0x24 trans=60 col=brown
+    keyb=1 layout=0x12 split=0x10:. keyb=2 trans=0x24:60 col=brown
 
     *without splitting, this layout gives about an octave and a half of range,
      with the same notes in the bottom two rows repeated in the top two rows

@@ -143,7 +143,7 @@ void doConfigClause(char* clause, const char* file, int linenum, int word) {
       char val = -1;
       if (strchr("0123456789", val2[0]) != NULL) {
 	// MIDI note number
-	char val = (char)atoi(val2);
+	val = (char)atoi(val2);
       }
       else if (strchr("ABCDEFG", val2[0]) != NULL) {
 	// note name like C4, Bb6, F#2 (C4 is middle C)
