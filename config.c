@@ -43,13 +43,12 @@ void doConfigClause(char* clause, const char* file, int linenum, int word) {
     }
   }
 
-  // select keyboard (1 <= int <= NUM_KEYBDS) and set instrument (0 <= int <= NUM_INSTS)
+  // select keyboard (1 <= int <= NUM_KEYBDS) : set instrument (0 <= int <= NUM_INSTS)
   // instrument 0 means "same as previous keyboard"
   else if (strncmp(key, "key", 3) == 0) {
-    int val;
     char* val2 = nexttok(value, ":");
     if (strlen(value)) {
-      val = atoi(value);
+      int val = atoi(value);
       if (val < 1 || val > NUM_KEYBDS) {
 	TRACE; printf("Invalid value for keyboard number: %s (Should be between 1 and %d)\n", value, NUM_KEYBDS);
       } else {
@@ -57,7 +56,7 @@ void doConfigClause(char* clause, const char* file, int linenum, int word) {
       }
     }
     if (val2 != NULL && strlen(val2)) {
-      val = atoi(val2);
+      int val = atoi(val2);
       if (val < 0 || val > NUM_INSTS) {
 	TRACE; printf("Invalid value for instrument number: %s (Should be between 0 and %d)\n", value, NUM_INSTS);
       } else {
@@ -76,7 +75,7 @@ void doConfigClause(char* clause, const char* file, int linenum, int word) {
     }
   }
   
-  // set color (cymg)
+  // set color
   else if (strncmp(key, "col", 3) == 0) {
     if (strcmp(value, "gray") == 0) { KEYB.color = COL_GRAY; }
     else if (strcmp(value, "red") == 0) { KEYB.color = COL_RED; }
@@ -92,32 +91,36 @@ void doConfigClause(char* clause, const char* file, int linenum, int word) {
     }
   }
     
-  // set split (grid)
+  // set split (grid : [ / | \ ` ' , . ])
   else if (strncmp(key, "spl", 3) == 0) {
-    char val = (char)strtol(value, NULL, 0);
-    KEYB.split = val;
-  }
-  
-  // set slant (/ | \ ` ' , .)
-  else if (strncmp(key, "sla", 3) == 0) {
-    char val = value[0];
-    if (strchr("/|\\`',.", val) == NULL) {
-      TRACE; printf("Invalid value for keyboard split slant: %s (Should be one of / | \\ ` ' , .)\n", value);
-    } else {
-      KEYB.slant = val;
+    char* val2 = nexttok(value, ":");
+    if (strlen(value)) {
+      // TODO accept key cap as well as hex pair
+      char val = (char)strtol(value, NULL, 0);
+      KEYB.split = val;
+    }
+    if (val2 != NULL && strlen(val2)) {
+      char val = val2[0];
+      if (strchr("/|\\`',.", val) == NULL) {
+	TRACE; printf("Invalid value for keyboard split slant: %s (Should be one of / | \\ ` ' , .)\n", value);
+      } else {
+	KEYB.slant = val;
+      }
     }
   }
   
-  // set origin (grid)
-  else if (strncmp(key, "ori", 3) == 0) {
-    char val = (char)strtol(value, NULL, 0);
-    KEYB.origin = val;
-  }
-  
-  // set transpose (int)
+  // set transpose (grid : note)
   else if (strncmp(key, "tra", 3) == 0) {
-    char val = (char)atoi(value);
-    KEYB.transpose = val;
+    char* val2 = nexttok(value, ":");
+    if (strlen(value)) {
+      // TODO accept key cap as well as hex pair
+      char val = (char)strtol(value, NULL, 0);
+      KEYB.origin = val;
+    }
+    if (val2 != NULL && strlen(val2)) {
+      char val = (char)atoi(val2);
+      KEYB.transpose = val;
+    }
   }
 
   // set layout (grid)
