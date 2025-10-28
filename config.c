@@ -95,9 +95,20 @@ void doConfigClause(char* clause, const char* file, int linenum, int word) {
   else if (strncmp(key, "spl", 3) == 0) {
     char* val2 = nexttok(value, ":");
     if (strlen(value)) {
-      // TODO accept key cap as well as hex pair
-      char val = (char)strtol(value, NULL, 0);
-      KEYB.split = val;
+      char val = -1;
+      if (strlen(value) == 1 && qwerty[value[0]] >= 0) {
+	val = qwerty[value[0]];
+      }
+      else if (strlen(value) > 2 && value[0] == '0' && value[1] == 'x') {
+	val = (char)strtol(value, NULL, 0);
+      }
+
+      if (val == -1) {
+	TRACE; printf("Invalid key grid value: %s (Expected key char or else hex pair starting with '0x')\n", value);
+      }
+      else {
+	KEYB.split = val;
+      }
     }
     if (val2 != NULL && strlen(val2)) {
       char val = val2[0];
@@ -113,9 +124,20 @@ void doConfigClause(char* clause, const char* file, int linenum, int word) {
   else if (strncmp(key, "tra", 3) == 0) {
     char* val2 = nexttok(value, ":");
     if (strlen(value)) {
-      // TODO accept key cap as well as hex pair
-      char val = (char)strtol(value, NULL, 0);
-      KEYB.origin = val;
+      char val = -1;
+      if (strlen(value) == 1 && qwerty[value[0]] >= 0) {
+	val = qwerty[value[0]];
+      }
+      else if (strlen(value) > 2 && value[0] == '0' && value[1] == 'x') {
+	val = (char)strtol(value, NULL, 0);
+      }
+
+      if (val == -1) {
+	TRACE; printf("Invalid key grid value: %s (Expected key char or else hex pair starting with '0x')\n", value);
+      }
+      else {
+	KEYB.origin = val;
+      }
     }
     if (val2 != NULL && strlen(val2)) {
       char val = (char)atoi(val2);

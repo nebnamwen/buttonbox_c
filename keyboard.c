@@ -25,6 +25,7 @@ keyboard_t default_keyboard = { 0, 0x09, '/', COL_GRAY, 0x00, 36, 0 };
 keyboard_t keyboard[NUM_KEYBDS + 1];
 
 signed char keygrid[256];
+signed char qwerty[256];
 
 void initKeygrid() {
 
@@ -35,61 +36,61 @@ void initKeygrid() {
   keyboard[1] = default_base_keyboard;
   
   for (int i = 0; i < 256; i++) {
-    keygrid[i] = -1;
+    keygrid[i] = qwerty[i] = -1;
   }
 
   keygrid[SDL_SCANCODE_LSHIFT] = -2;
   keygrid[SDL_SCANCODE_RSHIFT] = -2;
   keygrid[SDL_SCANCODE_SPACE] = -2;
   
-  keygrid[SDL_SCANCODE_Z] = 0x00;
-  keygrid[SDL_SCANCODE_X] = 0x01;
-  keygrid[SDL_SCANCODE_C] = 0x02;
-  keygrid[SDL_SCANCODE_V] = 0x03;
-  keygrid[SDL_SCANCODE_B] = 0x04;
-  keygrid[SDL_SCANCODE_N] = 0x05;
-  keygrid[SDL_SCANCODE_M] = 0x06;
-  keygrid[SDL_SCANCODE_COMMA] = 0x07;
-  keygrid[SDL_SCANCODE_PERIOD] = 0x08;
-  keygrid[SDL_SCANCODE_SLASH] = 0x09;
+  keygrid[SDL_SCANCODE_Z] = qwerty['z'] = 0x00;
+  keygrid[SDL_SCANCODE_X] = qwerty['x'] = 0x01;
+  keygrid[SDL_SCANCODE_C] = qwerty['c'] = 0x02;
+  keygrid[SDL_SCANCODE_V] = qwerty['v'] = 0x03;
+  keygrid[SDL_SCANCODE_B] = qwerty['b'] = 0x04;
+  keygrid[SDL_SCANCODE_N] = qwerty['n'] = 0x05;
+  keygrid[SDL_SCANCODE_M] = qwerty['m'] = 0x06;
+  keygrid[SDL_SCANCODE_COMMA] = qwerty[','] = 0x07;
+  keygrid[SDL_SCANCODE_PERIOD] = qwerty['.'] = 0x08;
+  keygrid[SDL_SCANCODE_SLASH] = qwerty['/'] = 0x09;
 
-  keygrid[SDL_SCANCODE_A] = 0x10;
-  keygrid[SDL_SCANCODE_S] = 0x11;
-  keygrid[SDL_SCANCODE_D] = 0x12;
-  keygrid[SDL_SCANCODE_F] = 0x13;
-  keygrid[SDL_SCANCODE_G] = 0x14;
-  keygrid[SDL_SCANCODE_H] = 0x15;
-  keygrid[SDL_SCANCODE_J] = 0x16;
-  keygrid[SDL_SCANCODE_K] = 0x17;
-  keygrid[SDL_SCANCODE_L] = 0x18;
-  keygrid[SDL_SCANCODE_SEMICOLON] = 0x19;
-  keygrid[SDL_SCANCODE_APOSTROPHE] = 0x1A;
+  keygrid[SDL_SCANCODE_A] = qwerty['a'] = 0x10;
+  keygrid[SDL_SCANCODE_S] = qwerty['s'] = 0x11;
+  keygrid[SDL_SCANCODE_D] = qwerty['d'] = 0x12;
+  keygrid[SDL_SCANCODE_F] = qwerty['f'] = 0x13;
+  keygrid[SDL_SCANCODE_G] = qwerty['g'] = 0x14;
+  keygrid[SDL_SCANCODE_H] = qwerty['h'] = 0x15;
+  keygrid[SDL_SCANCODE_J] = qwerty['j'] = 0x16;
+  keygrid[SDL_SCANCODE_K] = qwerty['k'] = 0x17;
+  keygrid[SDL_SCANCODE_L] = qwerty['l'] = 0x18;
+  keygrid[SDL_SCANCODE_SEMICOLON] = qwerty[';'] = 0x19;
+  keygrid[SDL_SCANCODE_APOSTROPHE] = qwerty['\''] = 0x1A;
 
-  keygrid[SDL_SCANCODE_Q] = 0x20;
-  keygrid[SDL_SCANCODE_W] = 0x21;
-  keygrid[SDL_SCANCODE_E] = 0x22;
-  keygrid[SDL_SCANCODE_R] = 0x23;
-  keygrid[SDL_SCANCODE_T] = 0x24;
-  keygrid[SDL_SCANCODE_Y] = 0x25;
-  keygrid[SDL_SCANCODE_U] = 0x26;
-  keygrid[SDL_SCANCODE_I] = 0x27;
-  keygrid[SDL_SCANCODE_O] = 0x28;
-  keygrid[SDL_SCANCODE_P] = 0x29;
-  keygrid[SDL_SCANCODE_LEFTBRACKET] = 0x2A;
-  keygrid[SDL_SCANCODE_RIGHTBRACKET] = 0x2B;
+  keygrid[SDL_SCANCODE_Q] = qwerty['q'] = 0x20;
+  keygrid[SDL_SCANCODE_W] = qwerty['w'] = 0x21;
+  keygrid[SDL_SCANCODE_E] = qwerty['e'] = 0x22;
+  keygrid[SDL_SCANCODE_R] = qwerty['r'] = 0x23;
+  keygrid[SDL_SCANCODE_T] = qwerty['t'] = 0x24;
+  keygrid[SDL_SCANCODE_Y] = qwerty['y'] = 0x25;
+  keygrid[SDL_SCANCODE_U] = qwerty['u'] = 0x26;
+  keygrid[SDL_SCANCODE_I] = qwerty['i'] = 0x27;
+  keygrid[SDL_SCANCODE_O] = qwerty['o'] = 0x28;
+  keygrid[SDL_SCANCODE_P] = qwerty['p'] = 0x29;
+  keygrid[SDL_SCANCODE_LEFTBRACKET] = qwerty['['] = 0x2A;
+  keygrid[SDL_SCANCODE_RIGHTBRACKET] = qwerty[']'] = 0x2B;
 
-  keygrid[SDL_SCANCODE_1] = 0x30;
-  keygrid[SDL_SCANCODE_2] = 0x31;
-  keygrid[SDL_SCANCODE_3] = 0x32;
-  keygrid[SDL_SCANCODE_4] = 0x33;
-  keygrid[SDL_SCANCODE_5] = 0x34;
-  keygrid[SDL_SCANCODE_6] = 0x35;
-  keygrid[SDL_SCANCODE_7] = 0x36;
-  keygrid[SDL_SCANCODE_8] = 0x37;
-  keygrid[SDL_SCANCODE_9] = 0x38;
-  keygrid[SDL_SCANCODE_0] = 0x39;
-  keygrid[SDL_SCANCODE_MINUS] = 0x3A;
-  keygrid[SDL_SCANCODE_EQUALS] = 0x3B;
+  keygrid[SDL_SCANCODE_1] = qwerty['1'] = 0x30;
+  keygrid[SDL_SCANCODE_2] = qwerty['2'] = 0x31;
+  keygrid[SDL_SCANCODE_3] = qwerty['3'] = 0x32;
+  keygrid[SDL_SCANCODE_4] = qwerty['4'] = 0x33;
+  keygrid[SDL_SCANCODE_5] = qwerty['5'] = 0x34;
+  keygrid[SDL_SCANCODE_6] = qwerty['6'] = 0x35;
+  keygrid[SDL_SCANCODE_7] = qwerty['7'] = 0x36;
+  keygrid[SDL_SCANCODE_8] = qwerty['8'] = 0x37;
+  keygrid[SDL_SCANCODE_9] = qwerty['9'] = 0x38;
+  keygrid[SDL_SCANCODE_0] = qwerty['0'] = 0x39;
+  keygrid[SDL_SCANCODE_MINUS] = qwerty['-'] = 0x3A;
+  keygrid[SDL_SCANCODE_EQUALS] = qwerty['='] = 0x3B;
 }
 
 int keyboardForGrid(char grid) {
