@@ -101,6 +101,7 @@ transpose -- where on the keyboard and on what note the scale starts
                      - the leading '0x' is required
 
         note -- the note to count from, either by name* or as a MIDI note number**
+                (see https://en.wikipedia.org/wiki/Piano_key_frequencies)
                 * a note letter, an optional sharp (#) or flat (b), and an octave number
                   e.g. C4 (middle C), A4 (concert A), Bb6, F#2, etc.
                 ** MIDI note numbers are integers between 0 and 127
