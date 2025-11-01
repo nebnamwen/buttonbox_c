@@ -29,12 +29,29 @@ int current_keybd = 1;
 
 #define TRACE printf("%s line %d word %d: ", file, linenum, word)
 
-void doConfigClause(char* clause, const char* file, int linenum, int word) {
+#define MAX_DEPTH 8
+
+void doConfigFile(const char* file, int depth);
+
+void doConfigClause(char* clause, const char* file, int linenum, int word, int depth) {
   char* key = clause;
   char* value = nexttok(clause, "=");
 
+  // read another config file recursively
+  if (strncmp(key, "fil", 3) == 0) {
+    if (!strlen(value)) {
+      TRACE; printf("Expected filename for file instruction.\n");
+    }
+    else if (depth > MAX_DEPTH) {
+      TRACE; printf("Maximum file recursion depth (%d) exceeded, not reading file '%s'\n", MAX_DEPTH, value);
+    }
+    else  {
+      doConfigFile(value, depth + 1);
+    }
+  }
+  
   // select instrument (1 <= int <= NUM_INSTS)
-  if (strncmp(key, "ins", 3) == 0) {
+  else if (strncmp(key, "ins", 3) == 0) {
     int val = atoi(value);
     if (val < 1 || val > NUM_INSTS) {
       TRACE; printf("Invalid value for instrument number: %s (Should be between 1 and %d)\n", value, NUM_INSTS);
@@ -302,7 +319,7 @@ void doConfigClause(char* clause, const char* file, int linenum, int word) {
   }
 }
 
-char doConfigLine(char* line, const char* file, int linenum) {
+char doConfigLine(char* line, const char* file, int linenum, int depth) {
   if (line[0] == '>') {
     line++;
     printf("%s", line);
@@ -321,7 +338,7 @@ char doConfigLine(char* line, const char* file, int linenum) {
     } else {
       if (strlen(current)) {
 	word++;
-	doConfigClause(current, file, linenum, word);
+	doConfigClause(current, file, linenum, word, depth);
       }
       cont = 0;
     }
@@ -330,8 +347,7 @@ char doConfigLine(char* line, const char* file, int linenum) {
   return cont;
 }
 
-void doConfigFile(const char* file) {
-  if (strchr("#\n", file[0]) != NULL) { return; }
+void doConfigFile(const char* file, int depth) {
   char line[256] = { 0 };
   FILE *fp = fopen(file, "r");
   if (fp == NULL) {
@@ -343,7 +359,7 @@ void doConfigFile(const char* file) {
     memset(line, 0, 256);
     fgets(line, 256, fp);
     linenum++;
-    if (strlen(line)) { doConfigLine(line, file, linenum); }
+    if (strlen(line)) { doConfigLine(line, file, linenum, depth); }
   }
   fclose(fp);
 }
@@ -357,7 +373,7 @@ void setDefaultInstrumentIfZero() {
   for (int i = 1; i <= NUM_KEYBDS; i++) {
     if (keyboard[i].instrument != 0 && instrument[keyboard[i].instrument].max_node == 0) {
       sprintf(buffer, "inst=%d A=env B=sin:A\n", keyboard[i].instrument);
-      doConfigLine(buffer, "INTERNAL", i);
+      doConfigLine(buffer, "INTERNAL", i, 0);
     }
   }
 }

@@ -30,8 +30,9 @@ int main(int argc, char *argv[]) {
   for (int i = 1; i < argc; i++) {
     char *arg = argv[i];
     char *pos = strchr(arg, '=');
-    if (pos == NULL) { doConfigFile(arg); }
-    else { doConfigLine(arg, "ARGV", 0); }
+    if (strchr("#\n", arg[0]) != NULL) { }
+    else if (pos == NULL) { doConfigFile(arg, 0); }
+    else { doConfigLine(arg, "ARGV", 0, 0); }
   }
 
   setDefaultInstrumentIfZero();
@@ -61,7 +62,7 @@ int main(int argc, char *argv[]) {
 	  do {
 	    if (fgets(buffer, sizeof(buffer), stdin) != NULL) {
 	      stdinline++;
-	      cont = doConfigLine(buffer, "STDIN", stdinline);
+	      cont = doConfigLine(buffer, "STDIN", stdinline, 0);
 	      initNotes();
 	      initDisplay();
 	    } else if (feof(stdin)) {
