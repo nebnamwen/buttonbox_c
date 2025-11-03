@@ -16,6 +16,20 @@ char* nexttok(char* start, const char* split) {
   }
 }
 
+typedef struct {
+  const char* file;
+  int linenum;
+  int word;
+  int depth;
+} trace_t;
+
+trace_t buildTrace(const char* file, int linenum, int word, int depth) {
+  trace_t trace = { file, linenum, word, depth };
+  return trace;
+}
+
+#define TRACE printf("%s line %d word %d: ", trace.file, trace.linenum, trace.word)
+
 #undef INST
 #undef INPUT
 
@@ -27,16 +41,14 @@ int current_keybd = 1;
 #define NODE INST.node[node_index]
 #define INPUT(j) NODE.input[j]
 
-#define TRACE printf("%s line %d word %d: ", file, linenum, word)
-
 #define MAX_DEPTH 8
 #define LABEL_SIZE 32
 
 #define IS_LABEL (clabel == NULL || strncmp(label, clabel, LABEL_SIZE) == 0)
 
-void doConfigFile(const char* file, const char* label, int depth);
+void doConfigFile(const char* file, const char* label, trace_t trace);
 
-void doConfigClause(char* clause, const char* file, const char* label, char* clabel, int linenum, int word, int depth) {
+void doConfigClause(char* clause, const char* label, char* clabel, trace_t trace) {
   char* key = clause;
   char* value = nexttok(clause, "=");
 
@@ -64,13 +76,13 @@ void doConfigClause(char* clause, const char* file, const char* label, char* cla
     if (!strlen(value)) {
       TRACE; printf("Expected filename for file instruction.\n");
     }
-    else if (depth > MAX_DEPTH) {
+    else if (trace.depth > MAX_DEPTH) {
       TRACE; printf("Maximum file recursion depth (%d) exceeded, not reading file '%s'\n", MAX_DEPTH, value);
     }
     else  {
       char* val2 = nexttok(value, ":");
       if (val2 == NULL) { val2 = value + strlen(value); }
-      doConfigFile(value, val2, depth + 1);
+      doConfigFile(value, val2, trace);
     }
   }
 
@@ -343,7 +355,7 @@ void doConfigClause(char* clause, const char* file, const char* label, char* cla
   }
 }
 
-char doConfigLine(char* line, const char* file, const char* label, char* clabel, int linenum, int depth) {
+char doConfigLine(char* line, const char* label, char* clabel, trace_t trace) {
   if (line[0] == '>') {
     line++;
     if (IS_LABEL) {
@@ -363,8 +375,8 @@ char doConfigLine(char* line, const char* file, const char* label, char* clabel,
       cont = 1;
     } else {
       if (strlen(current)) {
-	word++;
-	doConfigClause(current, file, label, clabel, linenum, word, depth);
+	trace.word++;
+	doConfigClause(current, label, clabel, trace);
       }
       cont = 0;
     }
@@ -373,21 +385,21 @@ char doConfigLine(char* line, const char* file, const char* label, char* clabel,
   return cont;
 }
 
-void doConfigFile(const char* file, const char* label, int depth) {
+void doConfigFile(const char* file, const char* label, trace_t trace) {
   char clabel[LABEL_SIZE+1] = { 0 };
   char line[256] = { 0 };
   FILE *fp = fopen(file, "r");
   if (fp == NULL) {
-    printf("Unable to read conf file %s\n", file);
+    TRACE; printf("Unable to read conf file '%s'\n", file);
     return;
   }
 
-  int linenum = 0;
+  trace = buildTrace(file, 0, 0, trace.depth + 1);
   while (!feof(fp)) {
     memset(line, 0, 256);
     fgets(line, 256, fp);
-    linenum++;
-    if (strlen(line)) { doConfigLine(line, file, label, clabel, linenum, depth); }
+    trace.linenum++;
+    if (strlen(line)) { doConfigLine(line, label, clabel, trace); }
   }
   fclose(fp);
 }
@@ -401,7 +413,7 @@ void setDefaultInstrumentIfZero() {
   for (int i = 1; i <= NUM_KEYBDS; i++) {
     if (keyboard[i].instrument != 0 && instrument[keyboard[i].instrument].max_node == 0) {
       sprintf(buffer, "inst=%d A=env B=sin:A\n", keyboard[i].instrument);
-      doConfigLine(buffer, "INTERNAL", "", NULL, i, 0);
+      doConfigLine(buffer, "", NULL, buildTrace("INTERNAL", i, 0, 0));
     }
   }
 }

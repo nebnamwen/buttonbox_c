@@ -27,12 +27,12 @@ int main(int argc, char *argv[]) {
   initNotes();
 
   // apply config from command line
-  for (int i = 1; i < argc; i++) {
-    char *arg = argv[i];
+  for (trace_t trace = buildTrace("ARGV", 1, 1, 0); trace.word < argc; trace.word++) {
+    char *arg = argv[trace.word];
     char *pos = strchr(arg, '=');
     if (strchr("#\n", arg[0]) != NULL) { }
-    else if (pos == NULL) { doConfigFile(arg, "", 0); }
-    else { doConfigLine(arg, "ARGV", "", NULL, 0, 0); }
+    else if (pos == NULL) { doConfigFile(arg, "", trace); }
+    else { doConfigClause(arg, "", NULL, trace); }
   }
 
   setDefaultInstrumentIfZero();
@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
 	  do {
 	    if (fgets(buffer, sizeof(buffer), stdin) != NULL) {
 	      stdinline++;
-	      cont = doConfigLine(buffer, "STDIN", "", NULL, stdinline, 0);
+	      cont = doConfigLine(buffer, "", NULL, buildTrace("STDIN", stdinline, 0, 0));
 	      initNotes();
 	      initDisplay();
 	    } else if (feof(stdin)) {
