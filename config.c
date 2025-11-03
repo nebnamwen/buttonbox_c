@@ -18,13 +18,20 @@ char* nexttok(char* start, const char* split) {
 
 typedef struct {
   const char* file;
+  const char* label;
+  char* clabel;
   int linenum;
   int word;
   int depth;
 } trace_t;
 
-trace_t buildTrace(const char* file, int linenum, int word, int depth) {
-  trace_t trace = { file, linenum, word, depth };
+trace_t buildTrace(const char* file, int linenum, int word) {
+  trace_t trace = { file, "", NULL, linenum, word, 0 };
+  return trace;
+}
+
+trace_t buildLabeledTrace(const char* file, const char* label, char* clabel, int depth) {
+  trace_t trace = { file, label, clabel, 0, 0, depth };
   return trace;
 }
 
@@ -44,11 +51,11 @@ int current_keybd = 1;
 #define MAX_DEPTH 8
 #define LABEL_SIZE 32
 
-#define IS_LABEL (clabel == NULL || strncmp(label, clabel, LABEL_SIZE) == 0)
+#define IS_LABEL (trace.clabel == NULL || strncmp(trace.label, trace.clabel, LABEL_SIZE) == 0)
 
 void doConfigFile(const char* file, const char* label, trace_t trace);
 
-void doConfigClause(char* clause, const char* label, char* clabel, trace_t trace) {
+void doConfigClause(char* clause, trace_t trace) {
   char* key = clause;
   char* value = nexttok(clause, "=");
 
@@ -59,11 +66,11 @@ void doConfigClause(char* clause, const char* label, char* clabel, trace_t trace
 
   // set current label
   if (strncmp(key, "lab", 3) == 0) {
-    if (clabel == NULL) {
+    if (trace.clabel == NULL) {
       TRACE; printf("Cannot set a label in this context.\n");
     }
     else {
-      strncpy(clabel, value, LABEL_SIZE);
+      strncpy(trace.clabel, value, LABEL_SIZE);
     }
   }
   // skip this clause if called label is different from current label
@@ -355,7 +362,7 @@ void doConfigClause(char* clause, const char* label, char* clabel, trace_t trace
   }
 }
 
-char doConfigLine(char* line, const char* label, char* clabel, trace_t trace) {
+char doConfigLine(char* line, trace_t trace) {
   if (line[0] == '>') {
     line++;
     if (IS_LABEL) {
@@ -376,7 +383,7 @@ char doConfigLine(char* line, const char* label, char* clabel, trace_t trace) {
     } else {
       if (strlen(current)) {
 	trace.word++;
-	doConfigClause(current, label, clabel, trace);
+	doConfigClause(current, trace);
       }
       cont = 0;
     }
@@ -394,12 +401,12 @@ void doConfigFile(const char* file, const char* label, trace_t trace) {
     return;
   }
 
-  trace = buildTrace(file, 0, 0, trace.depth + 1);
+  trace = buildLabeledTrace(file, label, clabel, trace.depth + 1);
   while (!feof(fp)) {
     memset(line, 0, 256);
     fgets(line, 256, fp);
     trace.linenum++;
-    if (strlen(line)) { doConfigLine(line, label, clabel, trace); }
+    if (strlen(line)) { doConfigLine(line, trace); }
   }
   fclose(fp);
 }
@@ -413,7 +420,7 @@ void setDefaultInstrumentIfZero() {
   for (int i = 1; i <= NUM_KEYBDS; i++) {
     if (keyboard[i].instrument != 0 && instrument[keyboard[i].instrument].max_node == 0) {
       sprintf(buffer, "inst=%d A=env B=sin:A\n", keyboard[i].instrument);
-      doConfigLine(buffer, "", NULL, buildTrace("INTERNAL", i, 0, 0));
+      doConfigLine(buffer, buildTrace("INTERNAL", i, 0));
     }
   }
 }
