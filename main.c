@@ -40,11 +40,15 @@ int main(int argc, char *argv[]) {
   initDisplay();
 
   int quit = 0;
-  int keycode = 0;
   int stdinline = 0;
-  SDL_Event e;
 
   while (! quit) {
+    SDL_Event e;
+    int keycode = 0;
+
+    char tab_continue;
+    char tab_buffer[256];
+
     while (SDL_PollEvent(&e)){
       switch (e.type) {
       case SDL_EVENT_QUIT:
@@ -52,59 +56,64 @@ int main(int argc, char *argv[]) {
         break;
 
       case SDL_EVENT_KEY_DOWN:
-	if (e.key.key == SDLK_ESCAPE) {
-	  quit = 1;
-	}
+	keycode = e.key.scancode;
+	printf("%d\n",keycode);
 
-	else if (e.key.key == SDLK_TAB) {
-	  char cont;
-	  char buffer[256];
-	  do {
-	    if (fgets(buffer, sizeof(buffer), stdin) != NULL) {
-	      stdinline++;
-	      cont = doConfigLine(buffer, buildTrace("STDIN", stdinline, 0));
-	      initNotes();
-	      initDisplay();
-	    } else if (feof(stdin)) {
-	      printf("STDIN line %d: End of file: No more config to read!\n", stdinline);
-	      cont = 0;
-	    } else if (ferror(stdin)) {
-	      printf("STDIN line %d: Error reading from STDIN!\n", stdinline);
-	      cont = 0;
-	    }
-	  } while (cont);
+	switch(keygrid[keycode]) {
+	case KEY_NOTHING:
+	  break;
 
-	  setDefaultInstrumentIfZero();
-	}
+	case KEY_FUNCTION:
+	  switch(keycode) {
+	  case SDL_SCANCODE_TAB:
+	    do {
+	      if (fgets(tab_buffer, sizeof(tab_buffer), stdin) != NULL) {
+		stdinline++;
+		tab_continue = doConfigLine(tab_buffer, buildTrace("STDIN", stdinline, 0));
+		initNotes();
+		initDisplay();
+	      } else if (feof(stdin)) {
+		printf("STDIN line %d: End of file: No more config to read!\n", stdinline);
+		tab_continue = 0;
+	      } else if (ferror(stdin)) {
+		printf("STDIN line %d: Error reading from STDIN!\n", stdinline);
+		tab_continue = 0;
+	      }
+	    } while (tab_continue);
 
-	else if (e.key.repeat == 0) {
-	  keycode = e.key.scancode;
-	  if (keycode > 0 && keycode < 256 && keygrid[keycode] != -1) {
-	    // printf("%d\n",keycode);
-	    notes[keycode].onset = RunningSampleIndex;
-	    if (keygrid[keycode] >= 0) {
+	    setDefaultInstrumentIfZero();
+	    break;
+	  }
+
+	  break;
+
+	default:
+	  if (e.key.repeat == 0) {
+	    if (keycode > 0 && keycode < 256 && keygrid[keycode] >= KEY_BUTTON) {
+	      notes[keycode].onset = RunningSampleIndex;
+	      if (keygrid[keycode] >= 0) {
 	      
-	      notes[keycode].instrument = instrument[instForKeyboard(keyboardForGrid(keygrid[keycode]))];
-	      notes[keycode].frequency = frequencyForNote(noteForGrid(keygrid[keycode]));
+		notes[keycode].instrument = instrument[instForKeyboard(keyboardForGrid(keygrid[keycode]))];
+		notes[keycode].frequency = frequencyForNote(noteForGrid(keygrid[keycode]));
 
-	      drawKeyIcon(keygrid[keycode], 1);
+		drawKeyIcon(keygrid[keycode], 1);
+	      }
 	    }
 	  }
+	  break;
 	}
 	break;
 
       case SDL_EVENT_KEY_UP:
 	keycode = e.key.scancode;
-	if (keycode > 0 && keycode < 256 && keygrid[keycode] != -1) {
+	if (keycode > 0 && keycode < 256 && keygrid[keycode] >= KEY_BUTTON) {
 	  notes[keycode].offset = RunningSampleIndex;
 	  if (keygrid[keycode] >= 0) {
 	    drawKeyIcon(keygrid[keycode], 0);
 	  }
 	}
-	break;
-	
+	break;	
       }
-
     }
 
     int BytesToWrite = TargetQueueBytes - SDL_GetAudioStreamQueued(stream);
@@ -144,6 +153,11 @@ int main(int argc, char *argv[]) {
     updateDisplay();
 
     SDL_Delay(500 * TargetQueueBytes / (BytesPerSample * SamplesPerSecond));
+
+    if (notes[SDL_SCANCODE_ESCAPE].onset > notes[SDL_SCANCODE_ESCAPE].offset &&
+	RunningSampleIndex - notes[SDL_SCANCODE_ESCAPE].onset > SamplesPerSecond * 0.5) {
+      quit = 1;
+    }
   }
 
   teardownSDL();

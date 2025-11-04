@@ -27,6 +27,10 @@ keyboard_t keyboard[NUM_KEYBDS + 1];
 signed char keygrid[256];
 signed char qwerty[256];
 
+#define KEY_BUTTON -1 // not a note key but onset and offset time are tracked using a note struct
+#define KEY_FUNCTION -2 // triggers a function call on press, no action on release, state not tracked
+#define KEY_NOTHING -3 // does nothing at all
+
 void initKeygrid() {
 
   for (int i = 0; i <= NUM_KEYBDS; i++) {
@@ -36,12 +40,16 @@ void initKeygrid() {
   keyboard[1] = default_base_keyboard;
   
   for (int i = 0; i < 256; i++) {
-    keygrid[i] = qwerty[i] = -1;
+    keygrid[i] = qwerty[i] = KEY_NOTHING;
   }
 
-  keygrid[SDL_SCANCODE_LSHIFT] = -2;
-  keygrid[SDL_SCANCODE_RSHIFT] = -2;
-  keygrid[SDL_SCANCODE_SPACE] = -2;
+  keygrid[SDL_SCANCODE_ESCAPE] = KEY_BUTTON;
+
+  keygrid[SDL_SCANCODE_TAB] = KEY_FUNCTION;
+
+  keygrid[SDL_SCANCODE_LSHIFT] = KEY_BUTTON;
+  keygrid[SDL_SCANCODE_RSHIFT] = KEY_BUTTON;
+  keygrid[SDL_SCANCODE_SPACE] = KEY_BUTTON;
   
   keygrid[SDL_SCANCODE_Z] = qwerty['z'] = 0x00;
   keygrid[SDL_SCANCODE_X] = qwerty['x'] = 0x01;
