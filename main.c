@@ -57,8 +57,7 @@ int main(int argc, char *argv[]) {
 
       case SDL_EVENT_KEY_DOWN:
 	keycode = e.key.scancode;
-	printf("%d\n",keycode);
-
+	
 	switch(keygrid[keycode]) {
 	case KEY_NOTHING:
 	  break;
@@ -70,8 +69,6 @@ int main(int argc, char *argv[]) {
 	      if (fgets(tab_buffer, sizeof(tab_buffer), stdin) != NULL) {
 		stdinline++;
 		tab_continue = doConfigLine(tab_buffer, buildTrace("STDIN", stdinline, 0));
-		initNotes();
-		initDisplay();
 	      } else if (feof(stdin)) {
 		printf("STDIN line %d: End of file: No more config to read!\n", stdinline);
 		tab_continue = 0;
@@ -81,7 +78,35 @@ int main(int argc, char *argv[]) {
 	      }
 	    } while (tab_continue);
 
+	    initNotes();
+	    initDisplay();
 	    setDefaultInstrumentIfZero();
+	    break;
+
+	  case SDL_SCANCODE_F1:
+	  case SDL_SCANCODE_F2:
+	  case SDL_SCANCODE_F3:
+	  case SDL_SCANCODE_F4:
+	  case SDL_SCANCODE_F5:
+	  case SDL_SCANCODE_F6:
+	  case SDL_SCANCODE_F7:
+	  case SDL_SCANCODE_F8:
+	  case SDL_SCANCODE_F9:
+	  case SDL_SCANCODE_F10:
+	  case SDL_SCANCODE_F11:
+	  case SDL_SCANCODE_F12:
+	    keycode = keycode - SDL_SCANCODE_F1 + 1;
+	    char label[] = "F00";
+	    snprintf(label, 4, "F%d", keycode);
+
+	    if (strlen(function_preset_file)) {
+	      doConfigFile(function_preset_file, label, buildTrace("FUNCTION", keycode, 0));
+	      setDefaultInstrumentIfZero();
+	      initDisplay();
+	    }
+	    else {
+	      printf("%s: No function key preset file configured.\n", label);
+	    }
 	    break;
 	  }
 

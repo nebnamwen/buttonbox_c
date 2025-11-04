@@ -47,6 +47,10 @@ void initKeygrid() {
 
   keygrid[SDL_SCANCODE_TAB] = KEY_FUNCTION;
 
+  for (int i = SDL_SCANCODE_F1; i <= SDL_SCANCODE_F12; i++) {
+    keygrid[i] = KEY_FUNCTION;
+  }
+
   keygrid[SDL_SCANCODE_LSHIFT] = KEY_BUTTON;
   keygrid[SDL_SCANCODE_RSHIFT] = KEY_BUTTON;
   keygrid[SDL_SCANCODE_SPACE] = KEY_BUTTON;

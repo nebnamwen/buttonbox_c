@@ -53,6 +53,8 @@ int current_keybd = 1;
 
 #define IS_LABEL (trace.clabel == NULL || strncmp(trace.label, trace.clabel, LABEL_SIZE) == 0)
 
+char function_preset_file[256] = { 0 };
+
 void doConfigFile(const char* file, const char* label, trace_t trace);
 
 void doConfigClause(char* clause, trace_t trace) {
@@ -78,6 +80,17 @@ void doConfigClause(char* clause, trace_t trace) {
     return;
   }
 
+  // set function key presets file
+  else if (strncmp(key, "fun", 3) == 0) {
+    if (strlen(value)) {
+      strncpy(function_preset_file, value, 256);
+    }
+    else {
+      // if filename is empty set to the current file
+      strncpy(function_preset_file, trace.file, 256);
+    }
+  }
+  
   // read another config file recursively
   else if (strncmp(key, "fil", 3) == 0) {
     if (!strlen(value)) {

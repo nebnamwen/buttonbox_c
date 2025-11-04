@@ -144,7 +144,7 @@ void drawKeyIcon(char grid, char onoff) {
 
 void initDisplay() {
   for (int keysym = 0; keysym < 128; keysym++) {
-    if (keygrid[keysym] >= 0) {
+    if (keygrid[keysym] >= 0 && notes[keysym].offset >= notes[keysym].onset) {
       drawKeyIcon(keygrid[keysym], 0);
     }
   }
