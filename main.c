@@ -179,8 +179,9 @@ int main(int argc, char *argv[]) {
 
     SDL_Delay(500 * TargetQueueBytes / (BytesPerSample * SamplesPerSecond));
 
-    if (notes[SDL_SCANCODE_ESCAPE].onset > notes[SDL_SCANCODE_ESCAPE].offset &&
-	RunningSampleIndex - notes[SDL_SCANCODE_ESCAPE].onset > SamplesPerSecond * 0.5) {
+#define ESC_NOTE notes[SDL_SCANCODE_ESCAPE]
+    if (ESC_NOTE.offset > ESC_NOTE.onset &&
+	ESC_NOTE.offset - ESC_NOTE.onset > SamplesPerSecond * 0.5) {
       quit = 1;
     }
   }
