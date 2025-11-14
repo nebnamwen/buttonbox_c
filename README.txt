@@ -29,7 +29,7 @@ may be freely mixed in one command line and will be parsed in the order given.
 
 See the sections below for information on config options.
 
-Press the Escape key or close the display window to quit.
+Close the window, or hold the Escape key for half a second and then release, to quit.
 
 == playing ButtonBox ==
 
@@ -69,6 +69,10 @@ End a line with a backslash \ to read another line immediately with
 a single press of TAB; config will be read until a line not ending in \
 is encountered.  The \ must a separate token delimited by whitespace.
 
+Sections of config files can also be assigned to the function keys F1-F12,
+which will be applied without blocking or pausing sound output.
+See "managing config files" below for more information.
+
 Clauses are separated by whitespace.  Blank lines or lines beginning
 with a # are ignored.
 
@@ -77,6 +81,33 @@ and only the first three letters of the key are significant.
 
 The expected format of the value varies depending on the key.
 See below for all config keys, expected values, and what they do.
+
+== managing config files ==
+
+The "label" config key tags the config clauses that follow with a label.
+By default, config clauses are untagged, and when reading a file only
+untagged clauses are executed.  When a file is invoked with a label,
+only clauses tagged with the matching label are executed.  This allows
+multiple separate configurations to be defined in the same file.
+
+  - See the config files in the examples folder for examples of labels.
+
+The "file" config key reads config from a file, with an optional label.
+Use a : to separate the filename and label.  If the filename is omitted
+it defaults to the current file when reading from a file, or to the
+function key preset file when reading from the command line or STDIN.
+
+  - As a special case, calling a file with the label "?" prints all
+     the labels defined in that file, without executing any config.
+
+The "function" config key sets the function key preset file.
+Pressing one of the function keys F1-F12 will read config from the
+corresponding label in this file.  If the filename is omitted it
+defaults to the current file (the = sign is still required).
+
+  - See the config files in examples/presets for examples of how to
+     define function key presets.
+  - In principle it's possible to define quite complex menu systems.
 
 == configuring the keyboard ==
 
@@ -345,8 +376,8 @@ Types: env | els | ers | esp
 
   - env (envelope): an envelope controlled by the onset and offset of a note key
   - els (envelope, left shift): controlled by the onset and offset of the left shift key*
-  - env (envelope, right shift): controlled by the onset and offset of the right shift key*
-  - env (envelope, space bar): controlled by the onset and offset of the space bar*
+  - ers (envelope, right shift): controlled by the onset and offset of the right shift key*
+  - esp (envelope, space bar): controlled by the onset and offset of the space bar*
 
   *The left and right shift keys and space bar cannot be assigned notes, but can be used
    to modify the sound produced by an instrument when a regular note key is pressed.
@@ -408,6 +439,10 @@ The default cutoff frequency is the pitch of the current note.
 
 == example instruments ==
 
+Additional instruments can be found in the conf files in the examples folder.
+These are only examples to demonstrate how the synthesis system works --
+please experiment and create whatever sounds you can imagine!
+
 -- simple waveforms --
 
 simple square wave (using the default envelope):
@@ -434,4 +469,4 @@ sine into sawtooth (sounds a bit brassy):
 
 triangle and sine with a fast decay (sounds a bit like a plucked string):
 
-    A=env:0.005,0.1,0.1,0.1 B=tri:A C=env:0,0.3,0.2,0.1 D=sin:C E=mix:B,,D
+    A=env:0.005,0.1,0.1,0.1 B=tri:A C=env:0.001,0.3,0.2,0.1 D=sin:C E=mix:B,,D
