@@ -3,16 +3,13 @@ char* nexttok(char* start, const char* split) {
     start++;
   }
 
-  if (*start != '\0' && strchr(split, *start) != NULL) {
+  if (*start != '\0') {
     *start = '\0';
     start++;
-  }
-
-  if (*start == '\0') {
-    return NULL;
+    return start;
   }
   else {
-    return start;
+    return NULL;
   }
 }
 
@@ -94,7 +91,7 @@ void doConfigClause(char* clause, trace_t trace) {
   // read another config file recursively
   else if (strncmp(key, "fil", 3) == 0) {
     if (!strlen(value)) {
-      TRACE; printf("Expected filename for file instruction.\n");
+      TRACE; printf("Expected filename or label for file instruction.\n");
     }
     else if (trace.depth > MAX_DEPTH) {
       TRACE; printf("Maximum file recursion depth (%d) exceeded, not reading file '%s'\n", MAX_DEPTH, value);
@@ -102,7 +99,22 @@ void doConfigClause(char* clause, trace_t trace) {
     else  {
       char* val2 = nexttok(value, ":");
       if (val2 == NULL) { val2 = value + strlen(value); }
-      doConfigFile(value, val2, trace);
+      if (!strlen(value)) {
+	if (trace.clabel == NULL) {
+	  if (strlen(function_preset_file)) {
+	    doConfigFile(function_preset_file, val2, trace);
+	  }
+	  else {
+	    TRACE; printf("No function key preset file configured.\n");
+	  }
+	}
+	else {
+	  doConfigFile(trace.file, val2, trace);
+	}
+      }
+      else {
+	doConfigFile(value, val2, trace);
+      }
     }
   }
 

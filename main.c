@@ -96,17 +96,13 @@ int main(int argc, char *argv[]) {
 	  case SDL_SCANCODE_F11:
 	  case SDL_SCANCODE_F12:
 	    keycode = keycode - SDL_SCANCODE_F1 + 1;
-	    char label[] = "F00";
-	    snprintf(label, 4, "F%d", keycode);
+	    char clause[] = "file=:F00";
+	    snprintf(clause, strlen(clause)+1, "file=:F%d", keycode);
 
-	    if (strlen(function_preset_file)) {
-	      doConfigFile(function_preset_file, label, buildTrace("FUNCTION", keycode, 0));
-	      setDefaultInstrumentIfZero();
-	      initDisplay();
-	    }
-	    else {
-	      printf("%s: No function key preset file configured.\n", label);
-	    }
+	    doConfigClause(clause, buildTrace("FUNCTION", keycode, 0));
+	    setDefaultInstrumentIfZero();
+	    initDisplay();
+
 	    break;
 	  }
 
