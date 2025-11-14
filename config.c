@@ -86,8 +86,13 @@ void doConfigClause(char* clause, trace_t trace) {
       strncpy(function_preset_file, value, 256);
     }
     else {
-      // if filename is empty set to the current file
-      strncpy(function_preset_file, trace.file, 256);
+      if (trace.clabel == NULL) {
+	TRACE; printf("Cannot set function key presets to the current file in this context.\n");
+      }
+      else {
+	// if filename is empty set to the current file
+	strncpy(function_preset_file, trace.file, 256);
+      }
     }
   }
   
