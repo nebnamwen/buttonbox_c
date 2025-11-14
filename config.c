@@ -68,6 +68,9 @@ void doConfigClause(char* clause, trace_t trace) {
     if (trace.clabel == NULL) {
       TRACE; printf("Cannot set a label in this context.\n");
     }
+    else if (strncmp(trace.label, "?", 2) == 0) {
+      printf("%s\n", value);
+    }
     else {
       strncpy(trace.clabel, value, LABEL_SIZE);
     }
