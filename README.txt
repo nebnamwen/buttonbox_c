@@ -7,7 +7,7 @@ The only build dependencies are the C standard library and SDL3 (https://www.lib
 
 A proof-of-concept in Java with slightly different features is also available
 at https://github.com/nebnamwen/buttonbox -- it uses Midi instruments, so it can
-produce a wider variety of more-realistic sounds, but has too much input lag
+produce a range of more-realistic sounds out of the box, but has too much input lag
 to be usable as a performing instrument.  This C version is much more responsive.
 
 == building ButtonBox ==
@@ -67,7 +67,7 @@ Press the TAB key to read a line of config from standard input.
 The application will block (pausing sound) until a line is available.
 End a line with a backslash \ to read another line immediately with
 a single press of TAB; config will be read until a line not ending in \
-is encountered.  The \ must a separate token delimited by whitespace.
+is encountered.  The \ must be a separate token delimited by whitespace.
 
 Sections of config files can also be assigned to the function keys F1-F12,
 which will be applied without blocking or pausing sound output.
@@ -82,7 +82,7 @@ and only the first three letters of the key are significant.
 The expected format of the value varies depending on the key.
 See below for all config keys, expected values, and what they do.
 
-== managing config files ==
+-- managing config files --
 
 The "label" config key tags the config clauses that follow with a label.
 By default, config clauses are untagged, and when reading a file only
@@ -134,7 +134,7 @@ transpose -- where on the keyboard and on what note the scale starts
         note -- the note to count from, either by name* or as a MIDI note number**
                 (see https://en.wikipedia.org/wiki/Piano_key_frequencies)
                 * a note letter, an optional sharp (#) or flat (b), and an octave number
-                  e.g. C4 (middle C), A4 (concert A), Bb6, F#2, etc.
+                  e.g. "C4" (middle C), "A4" (concert A), "Bb6", "F#2", etc.
                 ** MIDI note numbers are integers between 0 and 127
                    - middle C is 60 and concert A (440Hz) is 69
                    - the notes of a piano keyboard run from 21 to 108
