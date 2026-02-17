@@ -138,10 +138,11 @@ int main(int argc, char *argv[]) {
     }
 
     int BytesToWrite = TargetQueueBytes - SDL_GetAudioStreamQueued(stream);
-    // printf("%i\n", BytesToWrite);
+    int SamplesToWrite = BytesToWrite / BytesPerSample;
+    // printf("%i\n", SamplesToWrite);
 
     for (int SampleIndex = 0;
-	 SampleIndex < BytesToWrite / BytesPerSample;
+	 SampleIndex < SamplesToWrite;
 	 ++SampleIndex) {
       SampleOut[SampleIndex*2] = 0;
       SampleOut[SampleIndex*2 + 1] = 0;
@@ -150,7 +151,7 @@ int main(int argc, char *argv[]) {
     for (int n = 0; n < 64; n++) {
       if (keygrid[n] >= 0 && NOTE.onset) {
 	for (int SampleIndex = 0;
-	     SampleIndex < BytesToWrite / BytesPerSample;
+	     SampleIndex < SamplesToWrite;
 	     ++SampleIndex)
 	  {
 	    float SampleValue = sampleValue(n, RunningSampleIndex + SampleIndex);
@@ -161,7 +162,7 @@ int main(int argc, char *argv[]) {
       }
     }
 
-    RunningSampleIndex += BytesToWrite / BytesPerSample;
+    RunningSampleIndex += SamplesToWrite;
 
     for (int n = 0; n < 64; n++) {
       if (keygrid[n] >= 0 && isNoteFinished(n, RunningSampleIndex)) {
